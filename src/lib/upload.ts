@@ -1,9 +1,10 @@
 import { z } from "zod";
 
-// Wire format between the PowerSync upload queue and /api/powersync/upload
+// Wire format between the PowerSync upload queue and /api/powersync/upload.
+// Clients may only rate a scan or delete it; scans are created server-side.
 export const crudOp = z.object({
   op: z.enum(["PUT", "PATCH", "DELETE"]),
-  table: z.literal("items"),
+  table: z.literal("scans"),
   id: z.uuid(),
   data: z.record(z.string(), z.unknown()).optional(),
 });

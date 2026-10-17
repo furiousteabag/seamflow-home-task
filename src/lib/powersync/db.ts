@@ -10,7 +10,7 @@ export function getDB() {
   if (!db) {
     db = new PowerSyncDatabase({
       schema: AppSchema,
-      database: { dbFilename: "seamflow.db", worker: "/@powersync/worker.js" },
+      database: { dbFilename: "seefood.db", worker: "/@powersync/worker.js" },
       sync: { worker: "/@powersync/worker.js" },
     });
     db.connect(connector);

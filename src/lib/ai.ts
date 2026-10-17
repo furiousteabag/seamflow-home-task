@@ -1,6 +1,7 @@
 import "server-only";
 import { anthropic } from "@ai-sdk/anthropic";
 
+export const CLASSIFIER_MODEL_ID = "claude-haiku-5-5";
+
 // Reads ANTHROPIC_API_KEY from the environment at call time
-export const model = anthropic("claude-sonnet-5-5");
-export const fastModel = anthropic("claude-haiku-5-5");
+export const classifierModel = anthropic(CLASSIFIER_MODEL_ID);

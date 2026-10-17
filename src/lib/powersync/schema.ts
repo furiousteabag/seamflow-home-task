@@ -1,16 +1,23 @@
 import { column, Schema, Table } from "@powersync/web";
 
-// Local SQLite mirror of public.items (id column is implicit)
-const items = new Table(
+// Local SQLite mirror of the user's public.scans rows (id column is implicit)
+const scans = new Table(
   {
-    title: column.text,
-    source: column.text,
-    user_id: column.text,
+    verdict: column.text,
+    confidence: column.real,
+    label: column.text,
+    reasoning: column.text,
+    image_path: column.text,
+    thumbnail: column.text,
+    model: column.text,
+    latency_ms: column.integer,
+    channel: column.text,
+    feedback: column.text,
     created_at: column.text,
   },
   { indexes: { created: ["created_at"] } },
 );
 
-export const AppSchema = new Schema({ items });
+export const AppSchema = new Schema({ scans });
 
-export type LocalItem = (typeof AppSchema)["types"]["items"];
+export type LocalScan = (typeof AppSchema)["types"]["scans"] & { id: string };
