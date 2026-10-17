@@ -13,6 +13,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/app/app-shell";
 import { HotDogScore } from "@/components/app/hot-dog-score";
+import { Hotdogify } from "@/components/app/hotdogify";
+import { HungryFinder } from "@/components/app/hungry-finder";
 import { ScanFeedback } from "@/components/app/scan-feedback";
 import { formatPercent } from "@/components/app/verdict-badge";
 import { Button } from "@/components/ui/button";
@@ -276,6 +278,12 @@ function Verdict({
             improvements={result.improvements}
             beforeUrl={preview}
           />
+        )}
+        {!hot && (
+          <>
+            <Hotdogify scanId={result.id} beforeUrl={preview} />
+            <HungryFinder />
+          </>
         )}
         <dl className="grid grid-cols-3 gap-2 rounded-md bg-muted/50 p-3 text-xs">
           <div>

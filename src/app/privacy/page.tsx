@@ -47,6 +47,17 @@ export default function PrivacyPage() {
             timestamps, for security and reliability.
           </li>
           <li>
+            <strong>Edited images.</strong> When you use Level it up or
+            Hot-dogify, the AI-edited version of your image is stored privately
+            alongside the original, with its new score.
+          </li>
+          <li>
+            <strong>Location, only when you ask.</strong> If you use “Find hot
+            dogs near me”, your browser shares your approximate location, which
+            we round to about 100 meters and use only to search for nearby
+            places. We do not store it.
+          </li>
+          <li>
             <strong>Data on your device.</strong> To work offline, the app keeps
             a copy of your scan history in your browser's local storage, and
             uses cookies to keep you signed in.
@@ -97,6 +108,14 @@ export default function PrivacyPage() {
           <li>
             <strong>PowerSync</strong>: syncs your scan history between our
             database and your devices.
+          </li>
+          <li>
+            <strong>OpenRouter</strong> and <strong>Google</strong> (Gemini
+            image model): edit images when you use Level it up or Hot-dogify.
+          </li>
+          <li>
+            <strong>Komoot Photon</strong> (OpenStreetMap search): receives the
+            rounded location for nearby hot dog place searches.
           </li>
           <li>
             <strong>Google</strong>: sign-in.

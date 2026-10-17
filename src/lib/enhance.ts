@@ -3,27 +3,40 @@ import { ScanError } from "@/lib/scans";
 
 export const ENHANCER_MODEL_ID = "google/gemini-3.1-flash-image";
 
-/** Asks an image model (via OpenRouter) to apply the suggested improvements to the photo. */
-export async function enhanceHotDog(
+export type EnhanceMode = "upgrade" | "hotdogify";
+
+function buildPrompt(mode: EnhanceMode, improvements: string[]) {
+  if (mode === "hotdogify") {
+    return `Edit this photo by adding one delicious, realistic hot dog to it: a grilled sausage in a sliced bun with a zigzag of mustard.
+Place it where it makes sense in the scene, at the right scale, perspective and lighting. If there is a person or animal, they can be holding or eating it; otherwise put it on a plate or nearby surface.
+Keep everything else in the photo unchanged. Photorealistic. No text, logos or watermarks.`;
+  }
+  const changes = improvements.length
+    ? improvements.map((i) => `- ${i}`).join("\n")
+    : "- Make it look more appetizing and premium";
+  return `Edit this photo of a hot dog to make it a better, more delicious-looking hot dog. Apply these improvements:
+${changes}
+Keep it clearly the same hot dog in the same scene: same camera angle, framing and setting. Photorealistic food photography, natural lighting. No text, logos or watermarks.`;
+}
+
+/**
+ * Edits the photo with an image model (via OpenRouter): "upgrade" applies the
+ * suggested improvements to a hot dog, "hotdogify" adds a hot dog to anything else.
+ */
+export async function enhanceImage(
   image: Uint8Array,
   mediaType: string,
-  improvements: string[],
+  mode: EnhanceMode,
+  improvements: string[] = [],
 ) {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
     throw new ScanError(
-      "Level up is not configured",
+      "Image editing is not configured",
       503,
       "enhancer_unavailable",
     );
   }
-
-  const changes = improvements.length
-    ? improvements.map((i) => `- ${i}`).join("\n")
-    : "- Make it look more appetizing and premium";
-  const prompt = `Edit this photo of a hot dog to make it a better, more delicious-looking hot dog. Apply these improvements:
-${changes}
-Keep it clearly the same hot dog in the same scene: same camera angle, framing and setting. Photorealistic food photography, natural lighting. No text, logos or watermarks.`;
 
   const response = await fetch(
     "https://openrouter.ai/api/v1/chat/completions",
@@ -42,7 +55,7 @@ Keep it clearly the same hot dog in the same scene: same camera angle, framing a
           {
             role: "user",
             content: [
-              { type: "text", text: prompt },
+              { type: "text", text: buildPrompt(mode, improvements) },
               {
                 type: "image_url",
                 image_url: {

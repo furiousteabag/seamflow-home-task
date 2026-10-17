@@ -153,7 +153,7 @@ export function HotDogScore({
   );
 }
 
-function Figure({
+export function Figure({
   label,
   score,
   url,

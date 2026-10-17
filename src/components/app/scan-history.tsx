@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { getScanImageUrl } from "@/app/app/actions";
 import { PageHeader } from "@/components/app/app-shell";
 import { HotDogScore } from "@/components/app/hot-dog-score";
+import { Hotdogify } from "@/components/app/hotdogify";
 import { ScanFeedback } from "@/components/app/scan-feedback";
 import { formatPercent, VerdictBadge } from "@/components/app/verdict-badge";
 import { Button } from "@/components/ui/button";
@@ -302,6 +303,15 @@ function ScanDialog({
                 beforeUrl={fullUrl?.url ?? scan.thumbnail}
                 enhancedScore={scan.enhanced_score}
                 enhancedUrl={fullUrl?.enhancedUrl}
+              />
+            )}
+            {scan.verdict === "not_hot_dog" && (
+              <Hotdogify
+                key={`${scan.id}-${fullUrl?.enhancedUrl ? "e" : "o"}`}
+                scanId={scan.id}
+                beforeUrl={fullUrl?.url ?? scan.thumbnail}
+                enhancedUrl={fullUrl?.enhancedUrl}
+                enhancedScore={scan.enhanced_score}
               />
             )}
             <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
