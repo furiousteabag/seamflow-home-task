@@ -103,3 +103,20 @@ export const levelUps = pgTable(
   },
   (t) => [index().on(t.userId, t.createdAt)],
 ).enableRLS();
+
+// Inbound "Contact sales" requests from the marketing site
+export const salesLeads = pgTable(
+  "sales_leads",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    name: text().notNull(),
+    email: text().notNull(),
+    company: text().notNull(),
+    jobTitle: text(),
+    companySize: text(),
+    interest: text().notNull(),
+    message: text(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index().on(t.createdAt)],
+).enableRLS();

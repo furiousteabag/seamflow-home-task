@@ -1,395 +1,442 @@
 import {
   ArrowRight,
-  BadgeCheck,
   CheckCircle2,
-  Code2,
-  Gauge,
-  History,
+  Cpu,
+  Database,
+  Globe,
+  KeyRound,
+  Lock,
+  Quote,
+  RefreshCw,
+  Server,
   ShieldCheck,
-  ThumbsUp,
-  WifiOff,
   XCircle,
 } from "lucide-react";
 import Link from "next/link";
-import { SiteFooter } from "@/components/marketing/site-footer";
-import { SiteHeader } from "@/components/marketing/site-header";
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import {
+  CtaBand,
+  HeroBackdrop,
+  heroPrimary,
+  heroSecondary,
+  MarketingShell,
+  SectionHeading,
+  SolutionIcon,
+} from "@/components/marketing/blocks";
+import {
+  customers,
+  resources,
+  solutions,
+} from "@/components/marketing/content";
+import { ProductTabs } from "@/components/marketing/product-tabs";
 
-const features = [
+const logos: { name: string; href: string }[] = [
+  { name: "Hooli", href: "/customers/hooli-arena" },
+  { name: "Aviato", href: "/customers/aviato-air" },
+  { name: "Endframe", href: "/customers/endframe-foods" },
+  { name: "Raviga", href: "/customers/raviga-hospitality" },
+  { name: "Pied Piper", href: "/customers" },
+  { name: "Bachmanity", href: "/customers" },
+];
+
+const stats = [
+  { value: "2", label: "possible verdicts. Ever." },
+  { value: "< 2 s", label: "median time to verdict" },
+  { value: "100%", label: "of scans on the audit record" },
+  { value: "0", label: "answers that say “it depends”" },
+];
+
+const trust = [
   {
-    icon: BadgeCheck,
-    title: "Binary certainty",
-    body: "Every image gets exactly one of two answers. No “maybe”, no “sandwich-adjacent”.",
-  },
-  {
-    icon: Gauge,
-    title: "Fast inference",
-    body: "Vision-model verdicts in about two seconds, with confidence scores and an explanation.",
-  },
-  {
-    icon: History,
-    title: "Complete audit trail",
-    body: "Every scan is logged with image, verdict, model, latency and channel. Export to CSV anytime.",
-  },
-  {
-    icon: ThumbsUp,
-    title: "Human-in-the-loop QA",
-    body: "Reviewers confirm or flag verdicts, giving you a measured accuracy number, not a promise.",
-  },
-  {
-    icon: WifiOff,
-    title: "Offline-ready workspace",
-    body: "History, analytics and feedback live on-device and sync automatically when you reconnect.",
+    icon: Lock,
+    title: "Secure by design",
+    body: "Private image storage, per-user isolation, hashed API keys and prompt-injection hardening.",
+    href: "/security",
+    cta: "Explore the Trust Center",
   },
   {
     icon: ShieldCheck,
-    title: "Secure by default",
-    body: "Private image storage, per-user isolation, hashed API keys, rate limiting and prompt-injection hardening.",
+    title: "Compliant across the globe",
+    body: "Controls aligned to HDPA, BUN-2 and ISO-HD, with a published subprocessor list.",
+    href: "/security#frameworks",
+    cta: "See our frameworks",
+  },
+  {
+    icon: Server,
+    title: "Reliable at scale",
+    body: "Live health checks for the database, storage, sync and AI services, published in real time.",
+    href: "/status",
+    cta: "View system status",
   },
 ];
 
-const plans = [
+const ecosystem = [
   {
-    name: "Starter",
-    price: "$0",
-    cadence: "forever",
-    blurb: "For individuals evaluating hot dogs.",
-    features: [
-      "Web app",
-      "Scan history & analytics",
-      "Offline workspace",
-      "Community support",
-    ],
-    cta: "Start free",
-    href: "/app",
+    icon: Cpu,
+    name: "Anthropic Claude",
+    body: "Vision models",
+    href: "/security#subprocessors",
   },
   {
-    name: "Business",
-    price: "$49",
-    cadence: "per month",
-    blurb: "For teams with a production hot dog workload.",
-    features: [
-      "Everything in Starter",
-      "REST API & API keys",
-      "CSV export",
-      "Email support",
-    ],
-    cta: "Start free trial",
-    href: "/app",
-    featured: true,
+    icon: Database,
+    name: "Supabase",
+    body: "Postgres, Auth, Storage",
+    href: "/security#subprocessors",
   },
   {
-    name: "Enterprise",
-    price: "Custom",
-    cadence: "annual contract",
-    blurb: "For organizations where hot dogs are mission-critical.",
-    features: [
-      "Everything in Business",
-      "SSO & audit exports",
-      "Dedicated instance",
-      "99.9% uptime SLA",
-    ],
-    cta: "Contact sales",
-    href: "mailto:sales@seefoodsystems.com",
-  },
-];
-
-const faqs = [
-  {
-    q: "Is a corn dog a hot dog?",
-    a: "No. A hot dog is a sausage served in a sliced bun. Corn dogs, sausages without buns and the animal all come back Not Hot Dog.",
+    icon: Globe,
+    name: "Vercel",
+    body: "Global edge hosting",
+    href: "/security#subprocessors",
   },
   {
-    q: "Can SeeFood recognize other foods?",
-    a: "It can tell you, with total confidence, that they are not hot dogs.",
+    icon: RefreshCw,
+    name: "PowerSync",
+    body: "Offline sync engine",
+    href: "/platform#edge",
   },
   {
-    q: "What happens to the images I upload?",
-    a: "They are stored privately, visible only to your workspace, and deleted when you delete the scan.",
+    icon: KeyRound,
+    name: "Google Workspace",
+    body: "Single sign-on",
+    href: "/login",
   },
-  {
-    q: "Can someone trick it with a sign that says “hot dog”?",
-    a: "Text inside images is treated as part of the picture, never as an instruction, so a label alone won't change the verdict.",
-  },
-  {
-    q: "Which model powers SeeFood?",
-    a: "Anthropic's Claude vision models, constrained to a strict structured output so every response is machine-readable.",
-  },
+  { icon: Server, name: "REST API", body: "Integrate anything", href: "/docs" },
 ];
 
 export default function Home() {
   return (
-    <div className="flex min-h-svh flex-col">
-      <SiteHeader />
-      <main className="flex-1">
-        <section className="border-b bg-gradient-to-b from-primary/5 to-background">
-          <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-20 lg:grid-cols-2 lg:py-28">
-            <div className="flex flex-col gap-6">
-              <Link
-                href="/docs"
-                className="inline-flex w-fit items-center gap-2 rounded-full border bg-background px-3 py-1 text-xs text-muted-foreground hover:text-foreground"
-              >
-                <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-medium text-primary-foreground">
-                  New
-                </span>
-                REST API v1 is generally available{" "}
-                <ArrowRight className="size-3" />
+    <MarketingShell>
+      <section className="relative overflow-hidden bg-slate-950 text-white">
+        <HeroBackdrop />
+        <div className="relative mx-auto grid max-w-7xl items-center gap-14 px-4 py-16 lg:grid-cols-[1.05fr_1fr] lg:py-24">
+          <div className="flex flex-col gap-6">
+            <Link
+              href="/platform#insights"
+              className="inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs text-slate-200 hover:bg-white/10"
+            >
+              <span className="rounded-full bg-sky-400 px-1.5 py-0.5 text-[10px] font-semibold text-slate-950">
+                NEW
+              </span>
+              Hot Dog Score is now generally available
+              <ArrowRight className="size-3" />
+            </Link>
+            <h1 className="text-4xl font-semibold tracking-tight text-balance sm:text-6xl">
+              The decisive food intelligence platform for the enterprise.
+            </h1>
+            <p className="max-w-xl text-lg text-slate-300 text-pretty">
+              SeeFood Enterprise classifies any image as{" "}
+              <strong className="text-white">Hot Dog</strong> or{" "}
+              <strong className="text-white">Not Hot Dog</strong>, with a
+              confidence score, an explanation and a complete audit trail. Built
+              for organizations that cannot afford ambiguity.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Link href="/contact-sales?interest=demo" className={heroPrimary}>
+                Request a demo <ArrowRight className="size-4" />
               </Link>
-              <h1 className="text-4xl font-semibold tracking-tight text-balance sm:text-5xl">
-                Hot dog detection for the enterprise.
-              </h1>
-              <p className="max-w-lg text-lg text-muted-foreground text-pretty">
-                SeeFood classifies any image as{" "}
-                <strong className="text-foreground">Hot Dog</strong> or{" "}
-                <strong className="text-foreground">Not Hot Dog</strong>.
-                Instantly, definitively, and with a full audit trail.
+              <Link href="/app" className={heroSecondary}>
+                Try it on your hot dog
+              </Link>
+            </div>
+            <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-400">
+              {[
+                "Sign in with Google",
+                "Works offline",
+                "REST API included",
+              ].map((t) => (
+                <span key={t} className="flex items-center gap-1.5">
+                  <CheckCircle2 className="size-4 text-sky-400" /> {t}
+                </span>
+              ))}
+            </div>
+          </div>
+          <ProductPreview />
+        </div>
+      </section>
+
+      <section className="border-b bg-background">
+        <div className="mx-auto flex max-w-7xl flex-col items-center gap-5 px-4 py-10">
+          <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+            Trusted by the most decisive (fictional) companies in the Valley
+          </p>
+          <div className="flex flex-wrap justify-center gap-x-12 gap-y-4">
+            {logos.map((l) => (
+              <Link
+                key={l.name}
+                href={l.href}
+                className="text-xl font-bold tracking-tight text-slate-400 transition-colors hover:text-slate-900"
+              >
+                {l.name}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-b bg-muted/40">
+        <div className="mx-auto grid max-w-7xl grid-cols-2 gap-px px-4 lg:grid-cols-4">
+          {stats.map((s) => (
+            <div key={s.label} className="px-4 py-10 text-center">
+              <p className="text-4xl font-semibold tracking-tight text-primary">
+                {s.value}
               </p>
-              <div className="flex flex-wrap gap-3">
-                <Link href="/app" className={buttonVariants({ size: "lg" })}>
-                  Start classifying free <ArrowRight className="size-4" />
-                </Link>
+              <p className="mt-1 text-sm text-muted-foreground">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="border-b">
+        <div className="mx-auto max-w-7xl px-4 py-20">
+          <SectionHeading
+            eyebrow="The SeeFood platform"
+            title="Five products. One unambiguous answer."
+            body="From the first photo to the auditor's question, SeeFood covers the full hot dog lifecycle on a single, secure platform."
+          />
+          <ProductTabs />
+          <Link
+            href="/platform"
+            className="inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
+          >
+            View the full platform overview <ArrowRight className="size-4" />
+          </Link>
+        </div>
+      </section>
+
+      <section className="border-b bg-muted/30">
+        <div className="mx-auto max-w-7xl px-4 py-20">
+          <SectionHeading
+            eyebrow="Solutions"
+            title="Built for every industry that serves, sells or regulates hot dogs"
+          />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {solutions.map((s) => (
+              <Link
+                key={s.slug}
+                href={`/solutions/${s.slug}`}
+                className="group flex flex-col rounded-xl border bg-card p-6 transition-shadow hover:shadow-lg"
+              >
+                <span className="flex size-11 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <SolutionIcon icon={s.icon} className="size-5" />
+                </span>
+                <h3 className="mt-4 text-lg font-semibold">{s.name}</h3>
+                <p className="mt-1 flex-1 text-sm text-muted-foreground">
+                  {s.tagline}
+                </p>
+                <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary">
+                  Learn more{" "}
+                  <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-b">
+        <div className="mx-auto max-w-7xl px-4 py-20">
+          <SectionHeading
+            eyebrow="Enterprise-grade"
+            title="Secure, compliant and reliable by design"
+            body="The questions your CISO will ask, answered before the first meeting."
+            center
+          />
+          <div className="grid gap-6 md:grid-cols-3">
+            {trust.map((t) => (
+              <div key={t.title} className="rounded-xl border bg-card p-8">
+                <t.icon className="size-8 text-primary" />
+                <h3 className="mt-5 text-xl font-semibold">{t.title}</h3>
+                <p className="mt-2 text-sm text-muted-foreground">{t.body}</p>
                 <Link
-                  href="/docs"
-                  className={buttonVariants({ size: "lg", variant: "outline" })}
+                  href={t.href}
+                  className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
                 >
-                  <Code2 className="size-4" /> API docs
+                  {t.cta} <ArrowRight className="size-4" />
                 </Link>
               </div>
-              <p className="text-xs text-muted-foreground">
-                No credit card. Sign in with Google and start in seconds.
-              </p>
-            </div>
-            <ProductPreview />
+            ))}
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section className="border-b">
-          <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-4 py-10">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              Trusted by fictional companies everywhere
-            </p>
-            <div className="flex flex-wrap justify-center gap-x-10 gap-y-3 text-lg font-semibold text-muted-foreground/70">
-              {[
-                "Hooli",
-                "Pied Piper",
-                "Raviga",
-                "Aviato",
-                "Endframe",
-                "Bachmanity",
-              ].map((n) => (
-                <span key={n}>{n}</span>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section id="features" className="scroll-mt-16 border-b">
-          <div className="mx-auto max-w-6xl px-4 py-20">
-            <div className="mb-12 max-w-2xl">
-              <p className="text-sm font-medium text-primary">Platform</p>
-              <h2 className="mt-2 text-3xl font-semibold tracking-tight">
-                Everything a hot dog program needs
-              </h2>
-              <p className="mt-3 text-muted-foreground">
-                One question, answered with the rigor your compliance team
-                expects.
-              </p>
-            </div>
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {features.map(({ icon: Icon, title, body }) => (
-                <div key={title} className="rounded-lg border bg-card p-6">
-                  <span className="flex size-9 items-center justify-center rounded-md bg-primary/10 text-primary">
-                    <Icon className="size-4" />
-                  </span>
-                  <h3 className="mt-4 font-medium">{title}</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">{body}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="border-b bg-muted/30">
-          <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-20 lg:grid-cols-2">
+      <section className="border-b bg-slate-950 text-white">
+        <div className="mx-auto max-w-7xl px-4 py-20">
+          <div className="mb-10 flex flex-col justify-between gap-4 md:flex-row md:items-end">
             <div>
-              <p className="text-sm font-medium text-primary">Developers</p>
-              <h2 className="mt-2 text-3xl font-semibold tracking-tight">
-                One endpoint. Two possible answers.
-              </h2>
-              <p className="mt-3 text-muted-foreground">
-                Integrate hot dog detection into any backend with a single
-                authenticated request. Scans made through the API appear in your
-                workspace audit log alongside web scans.
+              <p className="text-sm font-semibold tracking-wide text-sky-300 uppercase">
+                Customer outcomes
               </p>
-              <Link
-                href="/docs"
-                className={cn(buttonVariants({ variant: "outline" }), "mt-6")}
-              >
-                Read the API reference <ArrowRight className="size-4" />
-              </Link>
-            </div>
-            <pre className="overflow-x-auto rounded-lg border bg-zinc-950 p-5 text-xs leading-relaxed text-zinc-100">
-              <code>{`$ curl https://seefoodsystems.com/api/v1/classify \\
-    -H "Authorization: Bearer $SEEFOOD_API_KEY" \\
-    -F image=@lunch.jpg
-
-{
-  "verdict": "hot_dog",
-  "is_hot_dog": true,
-  "confidence": 0.98,
-  "label": "hot dog with mustard in a bun",
-  "model": "claude-haiku-5-5",
-  "latency_ms": 1840
-}`}</code>
-            </pre>
-          </div>
-        </section>
-
-        <section className="border-b">
-          <div className="mx-auto max-w-3xl px-4 py-20 text-center">
-            <p className="text-2xl font-medium tracking-tight text-balance">
-              “We replaced a twelve-person hot dog review committee with
-              SeeFood. Our false positive rate is now an OKR.”
-            </p>
-            <p className="mt-4 text-sm text-muted-foreground">
-              Erlich Bachman · Founder, Aviato (fictional)
-            </p>
-          </div>
-        </section>
-
-        <section id="pricing" className="scroll-mt-16 border-b">
-          <div className="mx-auto max-w-6xl px-4 py-20">
-            <div className="mb-12 text-center">
-              <h2 className="text-3xl font-semibold tracking-tight">
-                Simple, predictable pricing
+              <h2 className="mt-2 max-w-2xl text-3xl font-semibold tracking-tight sm:text-4xl">
+                Decisive teams ship hot dog decisions faster
               </h2>
-              <p className="mt-3 text-muted-foreground">
-                During launch, every workspace gets every feature for free.
-              </p>
             </div>
-            <div className="grid gap-6 lg:grid-cols-3">
-              {plans.map((p) => (
-                <div
-                  key={p.name}
-                  className={cn(
-                    "flex flex-col rounded-lg border bg-card p-6",
-                    p.featured &&
-                      "border-primary shadow-lg ring-1 ring-primary",
-                  )}
-                >
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-medium">{p.name}</h3>
-                    {p.featured && (
-                      <span className="rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground">
-                        Popular
-                      </span>
-                    )}
-                  </div>
-                  <p className="mt-4">
-                    <span className="text-3xl font-semibold">{p.price}</span>{" "}
-                    <span className="text-sm text-muted-foreground">
-                      {p.cadence}
-                    </span>
-                  </p>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    {p.blurb}
-                  </p>
-                  <ul className="mt-6 flex flex-1 flex-col gap-2 text-sm">
-                    {p.features.map((f) => (
-                      <li key={f} className="flex items-center gap-2">
-                        <CheckCircle2 className="size-4 text-primary" /> {f}
-                      </li>
-                    ))}
-                  </ul>
-                  <Link
-                    href={p.href}
-                    className={cn(
-                      buttonVariants({
-                        variant: p.featured ? "default" : "outline",
-                      }),
-                      "mt-6",
-                    )}
-                  >
-                    {p.cta}
-                  </Link>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section id="faq" className="scroll-mt-16 border-b">
-          <div className="mx-auto max-w-3xl px-4 py-20">
-            <h2 className="mb-8 text-3xl font-semibold tracking-tight">
-              Frequently asked questions
-            </h2>
-            <div className="divide-y rounded-lg border bg-card">
-              {faqs.map((f) => (
-                <details key={f.q} className="group p-5">
-                  <summary className="cursor-pointer list-none font-medium marker:hidden">
-                    <span className="flex items-center justify-between gap-4">
-                      {f.q}
-                      <span className="text-muted-foreground transition-transform group-open:rotate-45">
-                        +
-                      </span>
-                    </span>
-                  </summary>
-                  <p className="mt-2 text-sm text-muted-foreground">{f.a}</p>
-                </details>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="bg-primary text-primary-foreground">
-          <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 px-4 py-16 text-center">
-            <h2 className="text-3xl font-semibold tracking-tight">
-              Know what's on the plate.
-            </h2>
             <Link
-              href="/app"
-              className={buttonVariants({ size: "lg", variant: "secondary" })}
+              href="/customers"
+              className="inline-flex items-center gap-1 text-sm font-semibold text-sky-300 hover:underline"
             >
-              Launch SeeFood <ArrowRight className="size-4" />
+              Read all stories <ArrowRight className="size-4" />
             </Link>
           </div>
-        </section>
-      </main>
-      <SiteFooter />
-    </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {customers.map((c) => (
+              <Link
+                key={c.slug}
+                href={`/customers/${c.slug}`}
+                className="group flex flex-col rounded-xl border border-white/10 bg-white/5 p-6 transition-colors hover:bg-white/10"
+              >
+                <p className="text-4xl font-semibold tracking-tight text-sky-300">
+                  {c.metrics[0].value}
+                </p>
+                <p className="mt-1 text-sm text-slate-300">
+                  {c.metrics[0].label}
+                </p>
+                <p className="mt-6 flex-1 text-sm font-semibold">{c.company}</p>
+                <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-sky-300">
+                  Read the story <ArrowRight className="size-3.5" />
+                </span>
+              </Link>
+            ))}
+          </div>
+          <figure className="mt-12 rounded-xl border border-white/10 bg-white/5 p-8">
+            <Quote className="size-8 text-sky-300" />
+            <blockquote className="mt-4 text-2xl font-medium tracking-tight text-balance">
+              “{customers[0].quote.text}”
+            </blockquote>
+            <figcaption className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-400">
+              <span>
+                {customers[0].quote.author} · {customers[0].quote.role}
+              </span>
+              <Link
+                href={`/customers/${customers[0].slug}`}
+                className="font-semibold text-sky-300 hover:underline"
+              >
+                How Hooli Arena did it →
+              </Link>
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section className="border-b">
+        <div className="mx-auto max-w-7xl px-4 py-20">
+          <div className="mb-10 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+            <SectionHeading
+              eyebrow="Resources"
+              title="Insights for hot dog leaders"
+            />
+            <Link
+              href="/resources"
+              className="mb-10 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
+            >
+              Browse the library <ArrowRight className="size-4" />
+            </Link>
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            {resources.slice(0, 3).map((r) => (
+              <Link
+                key={r.title}
+                href={r.href}
+                className="group flex flex-col rounded-xl border bg-card p-6 transition-shadow hover:shadow-lg"
+              >
+                <span className="w-fit rounded bg-primary/10 px-2 py-0.5 text-xs font-semibold tracking-wide text-primary uppercase">
+                  {r.kind}
+                </span>
+                <h3 className="mt-4 text-lg font-semibold">{r.title}</h3>
+                <p className="mt-1 flex-1 text-sm text-muted-foreground">
+                  {r.body}
+                </p>
+                <span className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary">
+                  {r.cta} <ArrowRight className="size-4" />
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-b bg-muted/30">
+        <div className="mx-auto max-w-7xl px-4 py-20">
+          <SectionHeading
+            eyebrow="Ecosystem"
+            title="Runs on the stack you already trust"
+            center
+          />
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
+            {ecosystem.map((e) => (
+              <Link
+                key={e.name}
+                href={e.href}
+                className="flex flex-col items-center rounded-xl border bg-card p-5 text-center transition-shadow hover:shadow-md"
+              >
+                <e.icon className="size-7 text-primary" />
+                <p className="mt-3 text-sm font-semibold">{e.name}</p>
+                <p className="text-xs text-muted-foreground">{e.body}</p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <CtaBand />
+    </MarketingShell>
   );
 }
 
 function ProductPreview() {
   return (
     <div className="relative">
-      <div className="overflow-hidden rounded-xl border bg-card shadow-2xl">
-        <div className="flex items-center gap-1.5 border-b bg-muted/50 px-4 py-2.5">
+      <div className="overflow-hidden rounded-xl border border-white/10 bg-white text-slate-900 shadow-2xl shadow-sky-950/50">
+        <div className="flex items-center gap-1.5 border-b bg-slate-100 px-4 py-2.5">
           <span className="size-2.5 rounded-full bg-red-400" />
           <span className="size-2.5 rounded-full bg-amber-400" />
           <span className="size-2.5 rounded-full bg-emerald-400" />
-          <span className="ml-3 text-xs text-muted-foreground">
+          <span className="ml-3 rounded bg-white px-2 py-0.5 text-xs text-slate-500">
             seefoodsystems.com/app
           </span>
         </div>
-        {/* biome-ignore lint/performance/noImgElement: static marketing sample */}
-        <img
-          src="/samples/hot-dog.jpg"
-          alt="A hot dog with mustard"
-          className="aspect-[16/9] w-full object-cover"
-        />
-        <div className="flex items-center gap-3 bg-emerald-600 px-5 py-4 text-white">
-          <CheckCircle2 className="size-8" />
-          <div>
-            <p className="text-2xl font-bold tracking-tight">Hot Dog</p>
-            <p className="text-xs text-white/80">
-              98% confidence · 1.8 s · claude-haiku-5-5
-            </p>
+        <div className="grid grid-cols-[7rem_1fr]">
+          <div className="hidden flex-col gap-1 border-r bg-slate-50 p-3 text-[11px] text-slate-500 sm:flex">
+            <span className="rounded bg-primary/10 px-2 py-1 font-semibold text-primary">
+              Classify
+            </span>
+            <span className="px-2 py-1">History</span>
+            <span className="px-2 py-1">Analytics</span>
+            <span className="px-2 py-1">API keys</span>
+          </div>
+          <div className="col-span-2 sm:col-span-1">
+            {/* biome-ignore lint/performance/noImgElement: static marketing sample */}
+            <img
+              src="/samples/hot-dog.jpg"
+              alt="A hot dog with mustard"
+              className="aspect-[16/9] w-full object-cover"
+            />
+            <div className="flex items-center gap-3 bg-emerald-600 px-5 py-4 text-white">
+              <CheckCircle2 className="size-8" />
+              <div>
+                <p className="text-2xl font-bold tracking-tight">Hot Dog</p>
+                <p className="text-xs text-white/80">
+                  98% confidence · 1.8 s · claude-haiku-5-5
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 divide-x border-t text-center text-[11px]">
+              <div className="p-2">
+                <p className="font-semibold">1,284</p>
+                <p className="text-slate-500">scans</p>
+              </div>
+              <div className="p-2">
+                <p className="font-semibold">41%</p>
+                <p className="text-slate-500">hot dogs</p>
+              </div>
+              <div className="p-2">
+                <p className="font-semibold">97%</p>
+                <p className="text-slate-500">agreement</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-      <div className="absolute -top-5 -right-3 hidden items-center gap-3 rounded-lg border bg-card p-2 pr-4 shadow-lg sm:flex">
+      <div className="absolute -top-6 -right-2 hidden items-center gap-3 rounded-lg border bg-white p-2 pr-4 text-slate-900 shadow-xl sm:flex">
         {/* biome-ignore lint/performance/noImgElement: static marketing sample */}
         <img
           src="/samples/dog.jpg"
@@ -400,10 +447,14 @@ function ProductPreview() {
           <p className="flex items-center gap-1 text-sm font-semibold">
             <XCircle className="size-4 text-red-600" /> Not Hot Dog
           </p>
-          <p className="text-xs text-muted-foreground">
-            golden retriever · 99%
-          </p>
+          <p className="text-xs text-slate-500">golden retriever · 99%</p>
         </div>
+      </div>
+      <div className="absolute -bottom-6 -left-4 hidden rounded-lg border bg-white px-4 py-3 text-slate-900 shadow-xl md:block">
+        <p className="text-[11px] font-medium text-slate-500 uppercase">
+          Audit log
+        </p>
+        <p className="text-sm font-semibold">Every scan on record</p>
       </div>
     </div>
   );
