@@ -39,38 +39,20 @@ An enterprise edition of Jian Yang's app from HBO's *Silicon Valley*, built as a
 ## Architecture
 
 ```mermaid
-flowchart TB
-  subgraph Browser
-    UI[Next.js app<br/>React 19 + shadcn/ui]
-    LDB[(Local SQLite<br/>PowerSync)]
-    UI <--> LDB
-  end
+flowchart LR
+  B["🖥️ Browser<br/>Next.js UI + local SQLite"]
+  V["▲ Vercel<br/>Server Components, route handlers,<br/>/api/v1 (API keys)"]
+  C["Claude Haiku 5.5<br/>classify + score"]
+  O["OpenRouter · Gemini<br/>level up / hot-dogify"]
+  S[("Supabase<br/>Auth · Postgres · Storage")]
+  P["PowerSync<br/>sync streams"]
 
-  subgraph Vercel
-    RSC[Server Components<br/>+ Route Handlers]
-    API["/api/v1/classify<br/>API-key auth"]
-    UP["/api/powersync/upload<br/>offline write queue"]
-  end
-
-  subgraph Supabase
-    AUTH[Auth<br/>Google sign-in]
-    PG[(Postgres<br/>Drizzle, RLS on)]
-    ST[(Private Storage<br/>original images)]
-  end
-
-  CL[Anthropic Claude<br/>Haiku 5.5 vision]
-  OR[OpenRouter<br/>Gemini Flash Image]
-  PS[PowerSync Cloud]
-
-  UI -- upload --> RSC
-  API --> RSC
-  RSC -- classify --> CL
-  RSC -- level up / hot-dogify --> OR
-  RSC --> PG
-  RSC --> ST
-  UI -- session --> AUTH
-  LDB -- queued writes --> UP --> PG
-  PG -- logical replication --> PS -- sync streams --> LDB
+  B -- "upload, queued writes" --> V
+  V --> C
+  V --> O
+  V -- "validated, user-scoped writes" --> S
+  S -- "logical replication" --> P
+  P -- "per-user scans" --> B
 ```
 
 Reads in the app come from the local database, so they're instant and work offline. Writes go through server routes that validate the session and scope every row to the signed-in user.
