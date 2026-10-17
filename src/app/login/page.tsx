@@ -1,6 +1,6 @@
 import { ShieldCheck } from "lucide-react";
 import { Suspense } from "react";
-import { signInAsGuest } from "@/app/auth/actions";
+import { signInAsGuest, signInWithGoogle } from "@/app/auth/actions";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { env } from "@/env";
 
 export const metadata = { title: "Sign in" };
 
@@ -26,7 +27,9 @@ export default function LoginPage({ searchParams }: PageProps<"/login">) {
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
-          {/* Google sign-in (signInWithGoogle) is wired up; enable the provider in Supabase to add it back */}
+          <Suspense>
+            <GoogleSignIn />
+          </Suspense>
           <form action={signInAsGuest}>
             <Button type="submit" className="w-full">
               Continue as guest
@@ -61,4 +64,26 @@ async function LoginError({
   const { error } = await searchParams;
   if (!error) return null;
   return <p className="text-sm text-destructive">{String(error)}</p>;
+}
+
+// Appears as soon as the Google provider is enabled in Supabase, no redeploy needed
+async function GoogleSignIn() {
+  const enabled = await fetch(
+    `${env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/settings`,
+    {
+      headers: { apikey: env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY },
+    },
+  )
+    .then((r) => r.json())
+    .then((s) => s.external?.google === true)
+    .catch(() => false);
+  if (!enabled) return null;
+
+  return (
+    <form action={signInWithGoogle}>
+      <Button type="submit" variant="outline" className="w-full">
+        Continue with Google
+      </Button>
+    </form>
+  );
 }
