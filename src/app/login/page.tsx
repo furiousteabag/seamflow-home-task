@@ -1,4 +1,5 @@
 import { ShieldCheck } from "lucide-react";
+import Link from "next/link";
 import { Suspense } from "react";
 import { signInAsGuest, signInWithGoogle } from "@/app/auth/actions";
 import { Logo } from "@/components/logo";
@@ -49,6 +50,17 @@ export default function LoginPage({ searchParams }: PageProps<"/login">) {
           <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <ShieldCheck className="size-3.5" /> Images are stored privately and
             only visible to you.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            By continuing you agree to the{" "}
+            <Link href="/terms" className="underline underline-offset-2">
+              Terms
+            </Link>{" "}
+            and{" "}
+            <Link href="/privacy" className="underline underline-offset-2">
+              Privacy Policy
+            </Link>
+            .
           </p>
         </CardContent>
       </Card>

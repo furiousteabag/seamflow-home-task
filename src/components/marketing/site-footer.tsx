@@ -54,6 +54,18 @@ export function SiteFooter() {
           >
             System status
           </Link>
+          <Link
+            href="/privacy"
+            className="text-muted-foreground hover:text-foreground"
+          >
+            Privacy
+          </Link>
+          <Link
+            href="/terms"
+            className="text-muted-foreground hover:text-foreground"
+          >
+            Terms
+          </Link>
         </div>
       </div>
       <div className="border-t">
