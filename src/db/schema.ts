@@ -51,6 +51,14 @@ export const scans = pgTable(
     latencyMs: integer().notNull(),
     channel: scanChannel().notNull().default("web"),
     feedback: scanFeedback(),
+    // Quality rating and suggestions, only for hot dogs
+    hotDogScore: integer(),
+    // JSON array of short improvement suggestions
+    improvements: text(),
+    // "Level it up" result: AI-enhanced image and its re-scored rating
+    enhancedImagePath: text(),
+    enhancedScore: integer(),
+    enhancedAt: timestamp({ withTimezone: true }),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index().on(t.userId, t.createdAt)],

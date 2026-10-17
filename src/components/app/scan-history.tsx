@@ -6,6 +6,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { getScanImageUrl } from "@/app/app/actions";
 import { PageHeader } from "@/components/app/app-shell";
+import { HotDogScore } from "@/components/app/hot-dog-score";
 import { ScanFeedback } from "@/components/app/scan-feedback";
 import { formatPercent, VerdictBadge } from "@/components/app/verdict-badge";
 import { Button } from "@/components/ui/button";
@@ -145,6 +146,12 @@ export function ScanHistory() {
                   <th className="px-4 py-2 font-medium">Verdict</th>
                   <th className="px-4 py-2 font-medium">Detection</th>
                   <th className="px-4 py-2 font-medium">Confidence</th>
+                  <th className="hidden px-4 py-2 font-medium sm:table-cell">
+                    Score
+                  </th>
+                  <th className="hidden px-4 py-2 font-medium sm:table-cell">
+                    Score
+                  </th>
                   <th className="hidden px-4 py-2 font-medium md:table-cell">
                     Channel
                   </th>
@@ -172,6 +179,17 @@ export function ScanHistory() {
                     </td>
                     <td className="px-4 py-2 tabular-nums">
                       {formatPercent(scan.confidence)}
+                    </td>
+                    <td className="hidden px-4 py-2 tabular-nums sm:table-cell">
+                      {scan.hot_dog_score ?? (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                      {scan.enhanced_score != null && (
+                        <span className="text-amber-600">
+                          {" "}
+                          → {scan.enhanced_score}
+                        </span>
+                      )}
                     </td>
                     <td className="hidden px-4 py-2 uppercase text-muted-foreground text-xs md:table-cell">
                       {scan.channel}
@@ -228,19 +246,25 @@ function ScanDialog({
   const [fullUrl, setFullUrl] = useState<{
     id: string;
     url: string | null;
+    enhancedUrl: string | null;
   } | null>(null);
   const open = !!scan;
 
   if (scan && fullUrl?.id !== scan.id) {
-    setFullUrl({ id: scan.id, url: null });
-    getScanImageUrl(scan.id)
-      .then((url) => setFullUrl({ id: scan.id, url }))
-      .catch(() => setFullUrl({ id: scan.id, url: null }));
+    setFullUrl({ id: scan.id, url: null, enhancedUrl: null });
+    Promise.all([
+      getScanImageUrl(scan.id),
+      scan.enhanced_image_path ? getScanImageUrl(scan.id, "enhanced") : null,
+    ])
+      .then(([url, enhancedUrl]) =>
+        setFullUrl({ id: scan.id, url, enhancedUrl }),
+      )
+      .catch(() => setFullUrl({ id: scan.id, url: null, enhancedUrl: null }));
   }
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="max-h-[90svh] overflow-y-auto sm:max-w-lg">
         {scan && (
           <>
             <DialogHeader>
@@ -269,6 +293,17 @@ function ScanDialog({
                 <ImageOff className="size-6 text-muted-foreground" />
               )}
             </div>
+            {scan.verdict === "hot_dog" && scan.hot_dog_score != null && (
+              <HotDogScore
+                key={`${scan.id}-${fullUrl?.enhancedUrl ? "e" : "o"}`}
+                scanId={scan.id}
+                score={scan.hot_dog_score}
+                improvements={parseImprovements(scan.improvements)}
+                beforeUrl={fullUrl?.url ?? scan.thumbnail}
+                enhancedScore={scan.enhanced_score}
+                enhancedUrl={fullUrl?.enhancedUrl}
+              />
+            )}
             <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
               <dt className="text-muted-foreground">Confidence</dt>
               <dd className="tabular-nums">{formatPercent(scan.confidence)}</dd>
@@ -299,4 +334,15 @@ function ScanDialog({
       </DialogContent>
     </Dialog>
   );
+}
+
+function parseImprovements(raw: string | null) {
+  try {
+    const value = JSON.parse(raw ?? "[]");
+    return Array.isArray(value)
+      ? value.filter((v): v is string => typeof v === "string")
+      : [];
+  } catch {
+    return [];
+  }
 }

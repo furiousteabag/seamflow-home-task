@@ -6,4 +6,4 @@ streams:
   # Each signed-in user gets only their own scan history (thumbnails included, full images stay in Storage)
   my_scans:
     auto_subscribe: true
-    query: SELECT id, verdict, confidence, label, reasoning, image_path, thumbnail, model, latency_ms, channel, feedback, created_at FROM scans WHERE user_id = auth.user_id()
+    query: SELECT id, verdict, confidence, label, reasoning, image_path, thumbnail, model, latency_ms, channel, feedback, hot_dog_score, improvements, enhanced_image_path, enhanced_score, created_at FROM scans WHERE user_id = auth.user_id()

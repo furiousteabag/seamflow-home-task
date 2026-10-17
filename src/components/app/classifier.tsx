@@ -12,6 +12,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/app/app-shell";
+import { HotDogScore } from "@/components/app/hot-dog-score";
 import { ScanFeedback } from "@/components/app/scan-feedback";
 import { formatPercent } from "@/components/app/verdict-badge";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,9 @@ type Result = {
   reasoning: string;
   model: string;
   latency_ms: number;
+  hot_dog_score: number | null;
+  improvements: string[];
+  enhanced_score: number | null;
   created_at: string;
 };
 
@@ -174,7 +178,7 @@ export function Classifier() {
 
         <div className="flex flex-col gap-4">
           {result ? (
-            <Verdict result={result} onReset={reset} />
+            <Verdict result={result} preview={preview} onReset={reset} />
           ) : (
             <Card>
               <CardContent className="flex flex-col gap-4">
@@ -219,7 +223,15 @@ export function Classifier() {
   );
 }
 
-function Verdict({ result, onReset }: { result: Result; onReset: () => void }) {
+function Verdict({
+  result,
+  preview,
+  onReset,
+}: {
+  result: Result;
+  preview: string | null;
+  onReset: () => void;
+}) {
   const hot = result.is_hot_dog;
   return (
     <Card className="overflow-hidden py-0">
@@ -257,6 +269,14 @@ function Verdict({ result, onReset }: { result: Result; onReset: () => void }) {
           </div>
         </div>
         <p className="text-sm">{result.reasoning}</p>
+        {hot && result.hot_dog_score != null && (
+          <HotDogScore
+            scanId={result.id}
+            score={result.hot_dog_score}
+            improvements={result.improvements}
+            beforeUrl={preview}
+          />
+        )}
         <dl className="grid grid-cols-3 gap-2 rounded-md bg-muted/50 p-3 text-xs">
           <div>
             <dt className="text-muted-foreground">Model</dt>
