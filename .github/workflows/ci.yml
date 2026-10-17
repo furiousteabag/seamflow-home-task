@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      # Placeholder so env validation passes; CI never connects to the database
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Lint and format
+        run: pnpm biome ci
+      - name: Typecheck
+        run: pnpm typecheck
+      - name: Migrations match schema
+        run: |
+          pnpm drizzle-kit check
+          pnpm db:generate
+          test -z "$(git status --porcelain drizzle)" || (git status drizzle && exit 1)
+      - name: Build
+        run: pnpm build
