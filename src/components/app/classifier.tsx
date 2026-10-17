@@ -6,14 +6,19 @@ import {
   ImageUp,
   Loader2,
   RotateCcw,
+  Upload,
   WifiOff,
   XCircle,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/app/app-shell";
-import { HotDogScore } from "@/components/app/hot-dog-score";
-import { Hotdogify } from "@/components/app/hotdogify";
+import { CompareSlider, ImageView } from "@/components/app/compare-slider";
+import {
+  EnhanceAction,
+  ScoreSummary,
+  useEnhance,
+} from "@/components/app/hot-dog-score";
 import { HungryFinder } from "@/components/app/hungry-finder";
 import { ScanFeedback } from "@/components/app/scan-feedback";
 import { formatPercent } from "@/components/app/verdict-badge";
@@ -75,6 +80,7 @@ export function Classifier() {
         throw new Error(body.error?.message ?? "Request failed");
       setResult(body);
     } catch (error) {
+      setPreview(null);
       toast.error(
         error instanceof Error && error.message !== "Failed to fetch"
           ? error.message
@@ -102,10 +108,56 @@ export function Classifier() {
     classify(blob);
   };
 
-  const reset = () => {
-    setResult(null);
-    setPreview(null);
-  };
+  const pickFile = () => inputRef.current?.click();
+
+  const fileInput = (
+    <input
+      ref={inputRef}
+      type="file"
+      accept="image/*"
+      className="hidden"
+      onChange={(e) => {
+        const file = e.target.files?.[0];
+        if (file) classify(file);
+        e.target.value = "";
+      }}
+    />
+  );
+
+  // While analyzing: show the photo being classified
+  if (busy && preview) {
+    return (
+      <>
+        <PageHeader
+          title="Classify"
+          description="Upload an image. SeeFood returns a definitive verdict."
+        />
+        <Card className="relative mx-auto max-w-3xl overflow-hidden py-0">
+          <ImageView src={preview} alt="Uploaded image" />
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background/60 text-sm font-medium backdrop-blur-[2px]">
+            <Loader2 className="size-6 animate-spin text-primary" />
+            Analyzing…
+          </div>
+        </Card>
+      </>
+    );
+  }
+
+  if (result && preview) {
+    return (
+      <ResultView
+        key={result.id}
+        result={result}
+        preview={preview}
+        onNewScan={pickFile}
+        onReset={() => {
+          setResult(null);
+          setPreview(null);
+        }}
+        fileInput={fileInput}
+      />
+    );
+  }
 
   return (
     <>
@@ -113,201 +165,220 @@ export function Classifier() {
         title="Classify"
         description="Upload an image. SeeFood returns a definitive verdict."
       />
-
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <Card className="overflow-hidden py-0">
-          <CardContent className="p-0">
-            <button
-              type="button"
-              onClick={() => inputRef.current?.click()}
-              onDragOver={(e) => {
-                e.preventDefault();
-                setDragging(true);
-              }}
-              onDragLeave={() => setDragging(false)}
-              onDrop={(e) => {
-                e.preventDefault();
-                setDragging(false);
-                const file = e.dataTransfer.files[0];
-                if (file) classify(file);
-              }}
-              disabled={busy}
-              className={cn(
-                "relative flex aspect-[4/3] w-full flex-col items-center justify-center gap-3 bg-muted/40 text-center transition-colors hover:bg-muted/70",
-                dragging && "bg-primary/5 ring-2 ring-primary ring-inset",
-              )}
-            >
-              {preview ? (
-                // biome-ignore lint/performance/noImgElement: local blob preview
-                <img
-                  src={preview}
-                  alt="Uploaded"
-                  className="absolute inset-0 size-full object-contain"
-                />
+          <button
+            type="button"
+            onClick={pickFile}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragging(true);
+            }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragging(false);
+              const file = e.dataTransfer.files[0];
+              if (file) classify(file);
+            }}
+            disabled={busy}
+            className={cn(
+              "flex min-h-80 w-full flex-col items-center justify-center gap-3 bg-muted/40 p-8 text-center transition-colors hover:bg-muted/70",
+              dragging && "bg-primary/5 ring-2 ring-primary ring-inset",
+            )}
+          >
+            <span className="flex size-12 items-center justify-center rounded-full bg-background shadow-sm">
+              {busy ? (
+                <Loader2 className="size-5 animate-spin text-primary" />
               ) : (
-                <>
-                  <span className="flex size-12 items-center justify-center rounded-full bg-background shadow-sm">
-                    <ImageUp className="size-5 text-primary" />
-                  </span>
-                  <span className="text-sm font-medium">
-                    Drop an image, paste, or click to upload
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    JPEG, PNG or WebP · up to 5 MB · camera on mobile
-                  </span>
-                </>
+                <ImageUp className="size-5 text-primary" />
               )}
-              {busy && (
-                <span className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background/70 text-sm font-medium backdrop-blur-sm">
-                  <Loader2 className="size-6 animate-spin text-primary" />
-                  Analyzing…
-                </span>
-              )}
-            </button>
-            <input
-              ref={inputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) classify(file);
-                e.target.value = "";
-              }}
-            />
-          </CardContent>
+            </span>
+            <span className="text-sm font-medium">
+              Drop an image, paste, or click to upload
+            </span>
+            <span className="text-xs text-muted-foreground">
+              JPEG, PNG or WebP · up to 5 MB · camera on mobile
+            </span>
+          </button>
+          {fileInput}
         </Card>
 
-        <div className="flex flex-col gap-4">
-          {result ? (
-            <Verdict result={result} preview={preview} onReset={reset} />
-          ) : (
-            <Card>
-              <CardContent className="flex flex-col gap-4">
-                <p className="text-sm text-muted-foreground">
-                  {offline ? (
-                    <span className="flex items-center gap-2">
-                      <WifiOff className="size-4" /> You're offline. History and
-                      feedback still work; classification resumes when you
-                      reconnect.
-                    </span>
-                  ) : (
-                    "No image yet. Try one of the samples:"
-                  )}
-                </p>
-                <div className="grid grid-cols-3 gap-3">
-                  {SAMPLES.map((s) => (
-                    <button
-                      type="button"
-                      key={s.src}
-                      onClick={() => trySample(s.src)}
-                      disabled={busy}
-                      className="group overflow-hidden rounded-md border text-left"
-                    >
-                      {/* biome-ignore lint/performance/noImgElement: tiny static samples */}
-                      <img
-                        src={s.src}
-                        alt={s.label}
-                        className="aspect-square w-full object-cover transition-transform group-hover:scale-105"
-                      />
-                      <span className="block px-2 py-1 text-xs text-muted-foreground">
-                        {s.label}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+        <Card>
+          <CardContent className="flex flex-col gap-3">
+            {offline ? (
+              <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                <WifiOff className="size-4 shrink-0" /> You're offline. History
+                and feedback still work; classification resumes when you
+                reconnect.
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No image handy? Try a sample:
+              </p>
+            )}
+            <div className="grid grid-cols-3 gap-2 lg:grid-cols-1">
+              {SAMPLES.map((s) => (
+                <button
+                  type="button"
+                  key={s.src}
+                  onClick={() => trySample(s.src)}
+                  disabled={busy}
+                  className="group flex flex-col overflow-hidden rounded-md border text-left lg:flex-row lg:items-center"
+                >
+                  {/* biome-ignore lint/performance/noImgElement: tiny static samples */}
+                  <img
+                    src={s.src}
+                    alt={s.label}
+                    className="aspect-square w-full object-cover transition-transform group-hover:scale-105 lg:size-14 lg:w-14"
+                  />
+                  <span className="px-3 py-1.5 text-xs text-muted-foreground lg:text-sm">
+                    {s.label}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </>
   );
 }
 
-function Verdict({
+function ResultView({
   result,
   preview,
+  onNewScan,
   onReset,
+  fileInput,
 }: {
   result: Result;
-  preview: string | null;
+  preview: string;
+  onNewScan: () => void;
   onReset: () => void;
+  fileInput: React.ReactNode;
 }) {
   const hot = result.is_hot_dog;
+  const enhance = useEnhance(result.id);
+
   return (
-    <Card className="overflow-hidden py-0">
-      <div
-        className={cn(
-          "flex items-center gap-3 px-6 py-6 text-white",
-          hot ? "bg-emerald-600" : "bg-red-600",
-        )}
-      >
-        {hot ? (
-          <CheckCircle2 className="size-10" />
-        ) : (
-          <XCircle className="size-10" />
-        )}
-        <div>
-          <p className="text-3xl font-bold tracking-tight">
-            {hot ? "Hot Dog" : "Not Hot Dog"}
-          </p>
-          <p className="text-sm text-white/80">Detected: {result.label}</p>
-        </div>
-      </div>
-      <CardContent className="flex flex-col gap-4 pb-6">
-        <div>
-          <div className="mb-1 flex justify-between text-sm">
-            <span className="text-muted-foreground">Confidence</span>
-            <span className="font-medium tabular-nums">
-              {formatPercent(result.confidence)}
-            </span>
+    <>
+      <PageHeader
+        title="Classify"
+        description="Upload an image. SeeFood returns a definitive verdict."
+        actions={
+          <div className="flex gap-2">
+            <Button variant="ghost" size="sm" onClick={onReset}>
+              <RotateCcw className="size-3.5" /> Clear
+            </Button>
+            <Button size="sm" onClick={onNewScan}>
+              <Upload className="size-3.5" /> New scan
+            </Button>
           </div>
-          <div className="h-2 overflow-hidden rounded-full bg-muted">
-            <div
-              className={cn("h-full", hot ? "bg-emerald-600" : "bg-red-600")}
-              style={{ width: formatPercent(result.confidence) }}
+        }
+      />
+      {fileInput}
+
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
+        <div className="flex min-w-0 flex-col gap-6">
+          <Card className="relative overflow-hidden py-0">
+            {enhance.result?.url ? (
+              <CompareSlider before={preview} after={enhance.result.url} />
+            ) : (
+              <ImageView src={preview} alt={result.label} />
+            )}
+            {enhance.busy && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background/60 text-sm font-medium backdrop-blur-[2px]">
+                <Loader2 className="size-6 animate-spin text-amber-500" />
+                {hot ? "Leveling up your hot dog…" : "Adding a hot dog…"}
+                <span className="text-xs font-normal text-muted-foreground">
+                  About 15 seconds
+                </span>
+              </div>
+            )}
+          </Card>
+          {!hot && <HungryFinder />}
+        </div>
+
+        <Card className="gap-0 overflow-hidden py-0 lg:sticky lg:top-8">
+          <div
+            className={cn(
+              "flex items-center gap-3 px-5 py-5 text-white",
+              hot ? "bg-emerald-600" : "bg-red-600",
+            )}
+          >
+            {hot ? (
+              <CheckCircle2 className="size-9 shrink-0" />
+            ) : (
+              <XCircle className="size-9 shrink-0" />
+            )}
+            <div className="min-w-0">
+              <p className="text-3xl font-bold tracking-tight">
+                {hot ? "Hot Dog" : "Not Hot Dog"}
+              </p>
+              <p className="truncate text-sm text-white/80">
+                Detected: {result.label}
+              </p>
+            </div>
+          </div>
+          <CardContent className="flex flex-col gap-5 p-5">
+            <div>
+              <div className="mb-1 flex justify-between text-sm">
+                <span className="text-muted-foreground">Confidence</span>
+                <span className="font-medium tabular-nums">
+                  {formatPercent(result.confidence)}
+                </span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-muted">
+                <div
+                  className={cn(
+                    "h-full",
+                    hot ? "bg-emerald-600" : "bg-red-600",
+                  )}
+                  style={{ width: formatPercent(result.confidence) }}
+                />
+              </div>
+              <p className="mt-3 text-sm">{result.reasoning}</p>
+            </div>
+
+            {hot && result.hot_dog_score != null && (
+              <ScoreSummary
+                score={result.hot_dog_score}
+                improvements={result.improvements}
+              />
+            )}
+
+            <EnhanceAction
+              isHotDog={hot}
+              score={result.hot_dog_score}
+              busy={enhance.busy}
+              result={enhance.result}
+              onRun={enhance.run}
             />
-          </div>
-        </div>
-        <p className="text-sm">{result.reasoning}</p>
-        {hot && result.hot_dog_score != null && (
-          <HotDogScore
-            scanId={result.id}
-            score={result.hot_dog_score}
-            improvements={result.improvements}
-            beforeUrl={preview}
-          />
-        )}
-        {!hot && (
-          <>
-            <Hotdogify scanId={result.id} beforeUrl={preview} />
-            <HungryFinder />
-          </>
-        )}
-        <dl className="grid grid-cols-3 gap-2 rounded-md bg-muted/50 p-3 text-xs">
-          <div>
-            <dt className="text-muted-foreground">Model</dt>
-            <dd className="font-mono">{result.model}</dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">Latency</dt>
-            <dd className="font-mono">{result.latency_ms} ms</dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">Scan ID</dt>
-            <dd className="truncate font-mono" title={result.id}>
-              {result.id.slice(0, 8)}
-            </dd>
-          </div>
-        </dl>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <ScanFeedback scanId={result.id} />
-          <Button variant="ghost" size="sm" onClick={onReset}>
-            <RotateCcw className="size-3.5" /> New scan
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+
+            <div className="border-t pt-4">
+              <ScanFeedback scanId={result.id} />
+            </div>
+
+            <dl className="grid grid-cols-3 gap-2 rounded-md bg-muted/50 p-3 text-xs">
+              <div>
+                <dt className="text-muted-foreground">Model</dt>
+                <dd className="truncate font-mono">{result.model}</dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">Latency</dt>
+                <dd className="font-mono">{result.latency_ms} ms</dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">Scan ID</dt>
+                <dd className="truncate font-mono" title={result.id}>
+                  {result.id.slice(0, 8)}
+                </dd>
+              </div>
+            </dl>
+          </CardContent>
+        </Card>
+      </div>
+    </>
   );
 }

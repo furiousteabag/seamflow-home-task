@@ -7,9 +7,16 @@ export type EnhanceMode = "upgrade" | "hotdogify";
 
 function buildPrompt(mode: EnhanceMode, improvements: string[]) {
   if (mode === "hotdogify") {
-    return `Edit this photo by adding one delicious, realistic hot dog to it: a grilled sausage in a sliced bun with a zigzag of mustard.
-Place it where it makes sense in the scene, at the right scale, perspective and lighting. If there is a person or animal, they can be holding or eating it; otherwise put it on a plate or nearby surface.
-Keep everything else in the photo unchanged. Photorealistic. No text, logos or watermarks.`;
+    return `Edit this photo so it now clearly features a hot dog: a grilled sausage in a sliced bun with a zigzag of yellow mustard.
+
+How to add it:
+- If there is an animal in the photo, the animal must be eating the hot dog: holding it in its mouth or mid-bite, with the hot dog clearly visible.
+- If there is a person, they must be holding the hot dog up or taking a bite of it.
+- If there is food, swap the main dish for a hot dog or place a hot dog on the same plate.
+- Otherwise, place the hot dog prominently in the foreground where it makes sense.
+
+The hot dog must be fully inside the frame (not cut off by the edges), large enough to be the obvious focal point, and match the photo's perspective, lighting, shadows and depth of field so it looks real, not pasted on.
+Keep everything else in the photo the same: framing, background, subject identity. Photorealistic. No text, logos or watermarks.`;
   }
   const changes = improvements.length
     ? improvements.map((i) => `- ${i}`).join("\n")
