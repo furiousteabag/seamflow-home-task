@@ -21,10 +21,9 @@ export default function PrivacyPage() {
         <h2>Data we collect</h2>
         <ul>
           <li>
-            <strong>Account information.</strong> If you sign in with Google, we
-            receive your name, email address and profile picture from Google
-            through Supabase Auth. If you continue as a guest, we create an
-            anonymous account with no personal details.
+            <strong>Account information.</strong> When you sign in with Google,
+            we receive your name, email address and profile picture from Google
+            through Supabase Auth.
           </li>
           <li>
             <strong>Images you upload.</strong> Every image you submit for
@@ -100,8 +99,7 @@ export default function PrivacyPage() {
             database and your devices.
           </li>
           <li>
-            <strong>Google</strong>: sign-in, if you choose to sign in with
-            Google.
+            <strong>Google</strong>: sign-in.
           </li>
         </ul>
       </section>
@@ -113,9 +111,8 @@ export default function PrivacyPage() {
           the app removes both the record and the stored image. To delete your
           entire account and all associated data, email{" "}
           <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> from the
-          address on your account, or include your workspace's scan IDs for
-          guest accounts. We will complete the deletion within 30 days and
-          confirm by email.
+          address on your account. We will complete the deletion within 30 days
+          and confirm by email.
         </p>
       </section>
 

@@ -24,12 +24,18 @@ const nav = [
   { href: "/app/api-keys", label: "API keys", icon: KeyRound },
 ];
 
+type Profile = {
+  name: string | null;
+  email: string | null;
+  avatarUrl: string | null;
+};
+
 export function AppShell({
   children,
-  userLabel,
+  user,
 }: {
   children: ReactNode;
-  userLabel: string;
+  user: Profile;
 }) {
   const pathname = usePathname();
 
@@ -66,10 +72,17 @@ export function AppShell({
         </nav>
         <div className="hidden flex-col gap-3 border-t p-4 md:flex">
           <SyncStatus />
-          <div className="flex items-center justify-between gap-2">
-            <div className="min-w-0">
-              <p className="truncate text-sm font-medium">{userLabel}</p>
-              <p className="text-xs text-muted-foreground">Workspace owner</p>
+          <div className="flex items-center gap-3">
+            <Avatar user={user} />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium">
+                {user.name ?? user.email ?? "Signed in"}
+              </p>
+              {user.name && user.email && (
+                <p className="truncate text-xs text-muted-foreground">
+                  {user.email}
+                </p>
+              )}
             </div>
             <form action={signOut}>
               <Button
@@ -85,8 +98,11 @@ export function AppShell({
         </div>
       </aside>
       <main className="flex min-w-0 flex-1 flex-col">
-        <div className="flex items-center justify-between border-b px-4 py-2 md:hidden">
-          <SyncStatus />
+        <div className="flex items-center justify-between gap-3 border-b px-4 py-2 md:hidden">
+          <Avatar user={user} />
+          <div className="min-w-0 flex-1">
+            <SyncStatus />
+          </div>
           <form action={signOut}>
             <Button variant="ghost" size="sm" type="submit">
               Sign out
@@ -118,5 +134,28 @@ export function PageHeader({
       </div>
       {actions}
     </div>
+  );
+}
+
+function Avatar({ user }: { user: Profile }) {
+  const initials = (user.name ?? user.email ?? "?")
+    .split(/[\s@.]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
+
+  return user.avatarUrl ? (
+    // biome-ignore lint/performance/noImgElement: external Google avatar, tiny
+    <img
+      src={user.avatarUrl}
+      alt=""
+      referrerPolicy="no-referrer"
+      className="size-8 shrink-0 rounded-full border object-cover"
+    />
+  ) : (
+    <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">
+      {initials}
+    </span>
   );
 }

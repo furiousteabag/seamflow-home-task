@@ -157,7 +157,7 @@ export default function Home() {
                 </Link>
               </div>
               <p className="text-xs text-muted-foreground">
-                No credit card. No sign-up form. One click to a guest workspace.
+                No credit card. Sign in with Google and start in seconds.
               </p>
             </div>
             <ProductPreview />

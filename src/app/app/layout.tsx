@@ -22,7 +22,9 @@ async function Gate({ children }: { children: ReactNode }) {
 
   return (
     <PowerSyncProvider fallback={<ShellSkeleton />}>
-      <AppShell userLabel={user.email ?? "Guest workspace"}>
+      <AppShell
+        user={{ name: user.name, email: user.email, avatarUrl: user.avatarUrl }}
+      >
         {children}
       </AppShell>
     </PowerSyncProvider>

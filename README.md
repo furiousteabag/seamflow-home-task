@@ -21,7 +21,7 @@ An enterprise edition of Jian Yang's "Hot Dog or Not" from HBO's *Silicon Valley
 ## Production concerns covered
 
 - **Security:**
-  - Per-user isolation: guest workspaces via Supabase anonymous auth.
+  - Per-user isolation: Google sign-in via Supabase Auth; each account is its own workspace.
   - Every write is scoped to the session user.
   - Postgres RLS is on with no policies, so Supabase's REST API is closed.
   - Originals live in a private Storage bucket.
