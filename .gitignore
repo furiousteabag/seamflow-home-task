@@ -40,3 +40,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# powersync worker assets (copied on install)
+public/@powersync
+
+# supabase cli cache
+supabase/.temp

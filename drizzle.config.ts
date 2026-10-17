@@ -6,6 +6,7 @@ config({ path: ".env.local", quiet: true });
 
 export default defineConfig({
   schema: "./src/db/schema.ts",
+  schemaFilter: ["public"],
   out: "./drizzle",
   dialect: "postgresql",
   casing: "snake_case",
