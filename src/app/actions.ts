@@ -2,37 +2,21 @@
 
 import { generateText } from "ai";
 import { desc, eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
-import { z } from "zod";
 import { db } from "@/db";
 import { items } from "@/db/schema";
 import { fastModel } from "@/lib/ai";
-import { type ItemInput, itemInput } from "@/lib/validation";
+import { getUser } from "@/lib/supabase/server";
 
 type Result = { ok: true } | { ok: false; error: string };
 
-export async function addItem(input: ItemInput): Promise<Result> {
-  const parsed = itemInput.safeParse(input);
-  if (!parsed.success) {
-    return { ok: false, error: parsed.error.issues[0].message };
-  }
-  await db.insert(items).values({ title: parsed.data.title });
-  revalidatePath("/");
-  return { ok: true };
-}
-
-export async function deleteItem(id: string): Promise<Result> {
-  const parsed = z.uuid().safeParse(id);
-  if (!parsed.success) return { ok: false, error: "Invalid id" };
-  await db.delete(items).where(eq(items.id, parsed.data));
-  revalidatePath("/");
-  return { ok: true };
-}
-
 export async function generateItem(topic: string): Promise<Result> {
+  const user = await getUser();
+  if (!user) return { ok: false, error: "Sign in first" };
+
   const recent = await db
     .select({ title: items.title })
     .from(items)
+    .where(eq(items.userId, user.id))
     .orderBy(desc(items.createdAt))
     .limit(10);
 
@@ -55,8 +39,10 @@ export async function generateItem(topic: string): Promise<Result> {
     const title = text.trim().replace(/^["'-]+|["']+$/g, "");
     if (!title) return { ok: false, error: "AI returned an empty answer" };
 
-    await db.insert(items).values({ title: title.slice(0, 200), source: "ai" });
-    revalidatePath("/");
+    // Syncs back to the client through PowerSync
+    await db
+      .insert(items)
+      .values({ title: title.slice(0, 200), source: "ai", userId: user.id });
     return { ok: true };
   } catch (error) {
     console.error("generateItem failed", error);
