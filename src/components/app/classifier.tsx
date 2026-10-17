@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { PageHeader } from "@/components/app/app-shell";
+import { NEW_SCAN_EVENT, PageHeader } from "@/components/app/app-shell";
 import { CompareSlider, ImageView } from "@/components/app/compare-slider";
 import {
   EnhanceAction,
@@ -89,6 +89,16 @@ export function Classifier() {
     } finally {
       setBusy(false);
     }
+  }, []);
+
+  // "Classify" in the sidebar (or the logo) while already here starts over
+  useEffect(() => {
+    const reset = () => {
+      setResult(null);
+      setPreview(null);
+    };
+    window.addEventListener(NEW_SCAN_EVENT, reset);
+    return () => window.removeEventListener(NEW_SCAN_EVENT, reset);
   }, []);
 
   // Paste an image from the clipboard anywhere on the page

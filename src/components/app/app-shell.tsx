@@ -17,6 +17,8 @@ import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+export const NEW_SCAN_EVENT = "seefood:new-scan";
+
 const nav = [
   { href: "/app", label: "Classify", icon: ScanSearch },
   { href: "/app/history", label: "Scan history", icon: History },
@@ -38,12 +40,18 @@ export function AppShell({
   user: Profile;
 }) {
   const pathname = usePathname();
+  // Already on Classify: links to /app don't remount the page, so ask it to clear
+  const resetIfOnClassify = () => {
+    if (pathname === "/app") window.dispatchEvent(new Event(NEW_SCAN_EVENT));
+  };
 
   return (
     <div className="flex min-h-svh w-full flex-col md:flex-row">
       <aside className="flex shrink-0 flex-col border-b bg-sidebar md:sticky md:top-0 md:h-svh md:w-60 md:border-r md:border-b-0">
         <div className="flex h-14 items-center justify-between px-4">
-          <Logo href="/app" />
+          <span onClickCapture={resetIfOnClassify}>
+            <Logo href="/app" />
+          </span>
         </div>
         <nav className="flex gap-1 overflow-x-auto px-2 pb-2 md:flex-1 md:flex-col md:pb-0">
           {nav.map(({ href, label, icon: Icon }) => {
@@ -52,6 +60,7 @@ export function AppShell({
               <Link
                 key={href}
                 href={href}
+                onClick={href === "/app" ? resetIfOnClassify : undefined}
                 className={cn(
                   "flex shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground",
                   active && "bg-accent font-medium text-foreground",
