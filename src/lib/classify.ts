@@ -58,7 +58,7 @@ export async function classifyImage(image: Uint8Array, mediaType: string) {
       {
         role: "user",
         content: [
-          { type: "image", image, mediaType },
+          { type: "file", data: image, mediaType },
           { type: "text", text: "Hot dog or not hot dog?" },
         ],
       },
