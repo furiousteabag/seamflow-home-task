@@ -1,8 +1,6 @@
 import "server-only";
-import { createAnthropic } from "@ai-sdk/anthropic";
-import { env } from "@/env";
+import { anthropic } from "@ai-sdk/anthropic";
 
-const anthropic = createAnthropic({ apiKey: env.ANTHROPIC_API_KEY });
-
+// Reads ANTHROPIC_API_KEY from the environment at call time
 export const model = anthropic("claude-sonnet-5-5");
 export const fastModel = anthropic("claude-haiku-5-5");
