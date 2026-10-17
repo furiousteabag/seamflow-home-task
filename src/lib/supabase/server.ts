@@ -27,15 +27,23 @@ export async function createClient() {
   );
 }
 
-/** Verified user id + email from the session JWT, or null when signed out. */
+/** Verified user from the session JWT, or null when signed out. */
 export async function getUser() {
   // Supabase reads the clock while loading the session; keep it out of prerendering
   await connection();
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
-  if (!data?.claims) return null;
+  const claims = data?.claims;
+  // Guest sessions from before anonymous sign-in was disabled no longer count
+  if (!claims || claims.is_anonymous) return null;
+
+  const meta = (claims.user_metadata ?? {}) as Record<string, unknown>;
+  const text = (value: unknown) =>
+    typeof value === "string" && value ? value : null;
   return {
-    id: data.claims.sub,
-    email: (data.claims.email as string | undefined) || null,
+    id: claims.sub,
+    email: text(claims.email),
+    name: text(meta.full_name) ?? text(meta.name),
+    avatarUrl: text(meta.avatar_url) ?? text(meta.picture),
   };
 }

@@ -5,15 +5,21 @@ import { useEffect, useState } from "react";
 import { buttonVariants } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 
+type Session = { user: { is_anonymous?: boolean } } | null;
+// Leftover guest sessions don't count as signed in
+const isMember = (session: Session) => !!session && !session.user.is_anonymous;
+
 // Marketing pages stay static; the session is read from the local cookie after load
 export function AuthButton() {
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getSession().then(({ data }) => setSignedIn(!!data.session));
+    supabase.auth
+      .getSession()
+      .then(({ data }) => setSignedIn(isMember(data.session)));
     const { data } = supabase.auth.onAuthStateChange((_event, session) =>
-      setSignedIn(!!session),
+      setSignedIn(isMember(session)),
     );
     return () => data.subscription.unsubscribe();
   }, []);
