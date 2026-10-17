@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/logo";
-import { buttonVariants } from "@/components/ui/button";
+import { AuthButton } from "@/components/marketing/auth-button";
 
 const links = [
   { href: "/#features", label: "Product" },
@@ -27,17 +27,7 @@ export function SiteHeader() {
             ))}
           </nav>
         </div>
-        <div className="flex items-center gap-2">
-          <Link
-            href="/app"
-            className={buttonVariants({ variant: "ghost", size: "sm" })}
-          >
-            Sign in
-          </Link>
-          <Link href="/app" className={buttonVariants({ size: "sm" })}>
-            Launch app
-          </Link>
-        </div>
+        <AuthButton />
       </div>
     </header>
   );
