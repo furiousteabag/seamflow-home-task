@@ -2,6 +2,20 @@
 
 import { usePowerSync, useStatus } from "@powersync/react";
 import { useEffect, useState } from "react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+const explanations = {
+  Synced:
+    "Your scan history is stored on this device and matches the cloud. History, analytics and feedback keep working if you lose your connection.",
+  Syncing: "Uploading changes made on this device. You can keep working.",
+  Connecting: "Connecting to the sync service…",
+  Offline:
+    "No connection. History, analytics and feedback still work and will sync when you're back online. Classifying new images needs a connection.",
+};
 
 export function SyncStatus() {
   const db = usePowerSync();
@@ -16,18 +30,7 @@ export function SyncStatus() {
     return () => clearInterval(id);
   }, [db]);
 
-  // Simulates losing the network: history, feedback and deletes keep working locally
-  const toggle = async () => {
-    if (status.connected || status.connecting) {
-      await db.disconnect();
-    } else {
-      const { connector } = await import("@/lib/powersync/db");
-      await db.connect(connector);
-    }
-  };
-
-  const online = status.connected;
-  const label = !online
+  const label: keyof typeof explanations = !status.connected
     ? status.connecting
       ? "Connecting"
       : "Offline"
@@ -36,27 +39,25 @@ export function SyncStatus() {
       : "Synced";
 
   return (
-    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-      <span
-        className={`size-2 shrink-0 rounded-full ${
-          label === "Synced"
-            ? "bg-emerald-500"
-            : label === "Offline"
-              ? "bg-zinc-400"
-              : "bg-amber-500"
-        }`}
-      />
-      <span>
-        {label}
-        {pending > 0 && ` · ${pending} pending`}
-      </span>
-      <button
-        type="button"
-        onClick={toggle}
-        className="ml-auto underline-offset-2 hover:text-foreground hover:underline"
-      >
-        {status.connected || status.connecting ? "Go offline" : "Go online"}
-      </button>
-    </div>
+    <Tooltip>
+      <TooltipTrigger className="flex w-fit cursor-help items-center gap-2 text-xs text-muted-foreground">
+        <span
+          className={`size-2 shrink-0 rounded-full ${
+            label === "Synced"
+              ? "bg-emerald-500"
+              : label === "Offline"
+                ? "bg-zinc-400"
+                : "bg-amber-500"
+          }`}
+        />
+        <span>
+          {label}
+          {pending > 0 && ` · ${pending} pending`}
+        </span>
+      </TooltipTrigger>
+      <TooltipContent side="top" align="start" className="max-w-64">
+        {explanations[label]}
+      </TooltipContent>
+    </Tooltip>
   );
 }

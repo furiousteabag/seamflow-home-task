@@ -389,10 +389,17 @@ function ProductPreview() {
           </div>
         </div>
       </div>
-      <div className="absolute -bottom-6 -left-4 hidden items-center gap-2 rounded-lg border bg-card px-4 py-3 shadow-lg sm:flex">
-        <XCircle className="size-5 text-red-600" />
+      <div className="absolute -top-5 -right-3 hidden items-center gap-3 rounded-lg border bg-card p-2 pr-4 shadow-lg sm:flex">
+        {/* biome-ignore lint/performance/noImgElement: static marketing sample */}
+        <img
+          src="/samples/dog.jpg"
+          alt="A golden retriever"
+          className="size-10 rounded-md object-cover"
+        />
         <div>
-          <p className="text-sm font-semibold">Not Hot Dog</p>
+          <p className="flex items-center gap-1 text-sm font-semibold">
+            <XCircle className="size-4 text-red-600" /> Not Hot Dog
+          </p>
           <p className="text-xs text-muted-foreground">
             golden retriever · 99%
           </p>
