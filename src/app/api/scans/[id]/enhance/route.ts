@@ -2,7 +2,7 @@ import { and, count, eq, gt } from "drizzle-orm";
 import { db } from "@/db";
 import { levelUps, scans } from "@/db/schema";
 import { classifyImage } from "@/lib/classify";
-import { ENHANCER_MODEL_ID, enhanceHotDog } from "@/lib/enhance";
+import { ENHANCER_MODEL_ID, enhanceImage } from "@/lib/enhance";
 import { parseImprovements, ScanError } from "@/lib/scans";
 import { SCANS_BUCKET, supabaseAdmin } from "@/lib/supabase/admin";
 import { getUser } from "@/lib/supabase/server";
@@ -15,7 +15,7 @@ const LEVEL_UP_WINDOW_MS = 10 * 60_000;
 const error = (status: number, code: string, message: string) =>
   Response.json({ error: { code, message } }, { status });
 
-// "Level it up": AI-enhance a hot dog photo using its improvement list, then re-score it
+// "Level it up" (hot dogs) or "Hot-dogify" (everything else): AI-edit the photo, then re-score it
 export async function POST(
   _request: Request,
   { params }: RouteContext<"/api/scans/[id]/enhance">,
@@ -29,8 +29,7 @@ export async function POST(
     .from(scans)
     .where(and(eq(scans.id, id), eq(scans.userId, user.id)));
   if (!scan) return error(404, "not_found", "Scan not found");
-  if (scan.verdict !== "hot_dog")
-    return error(400, "not_a_hot_dog", "Only hot dogs can be leveled up");
+  const mode = scan.verdict === "hot_dog" ? "upgrade" : "hotdogify";
   // Image generation is the expensive call: cap it per user rather than per scan
   const [{ recent }] = await db
     .select({ recent: count() })
@@ -56,9 +55,10 @@ export async function POST(
     if (original.error || !original.data)
       throw new ScanError("Original image not found", 404, "image_missing");
 
-    const enhanced = await enhanceHotDog(
+    const enhanced = await enhanceImage(
       new Uint8Array(await original.data.arrayBuffer()),
       original.data.type || "image/jpeg",
+      mode,
       parseImprovements(scan.improvements),
     );
     const rescored = await classifyImage(enhanced.bytes, enhanced.mediaType);
@@ -99,7 +99,9 @@ export async function POST(
       .createSignedUrl(enhancedPath, 600);
     return Response.json({
       enhanced_url: signed.data?.signedUrl ?? null,
+      mode,
       hot_dog_score: scan.hotDogScore,
+      enhanced_verdict: rescored.verdict,
       enhanced_score: enhancedScore,
     });
   } catch (e) {
