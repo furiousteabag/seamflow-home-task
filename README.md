@@ -1,64 +1,109 @@
-# SeeFood Enterprise 🌭
+# SeeFood Enterprise
 
-An enterprise edition of Jian Yang's "Hot Dog or Not" from HBO's *Silicon Valley*. You upload an image and get a definitive **Hot Dog** or **Not Hot Dog** verdict.
+Upload an image, get a definitive **Hot Dog** or **Not Hot Dog**. An enterprise edition of Jian Yang's app from HBO's *Silicon Valley*.
 
-- **Live:** https://seefoodsystems.com (website) · https://seefoodsystems.com/app (app) · https://seefoodsystems.com/docs (API)
-- **Fallback URL:** https://seamflow-home-task.vercel.app
+[![CI](https://github.com/furiousteabag/seamflow-home-task/actions/workflows/ci.yml/badge.svg)](https://github.com/furiousteabag/seamflow-home-task/actions/workflows/ci.yml)
 
-## What's in it
+[Website](https://seefoodsystems.com) · [App](https://seefoodsystems.com/app) · [API reference](https://seefoodsystems.com/docs)
 
-| Area | What it does |
+## Features
+
+| Feature | Details |
 |---|---|
-| **Classifier** | Claude Haiku 5.5 vision with structured output: verdict, confidence, label, one-line reasoning. Text inside images is treated as content, not instructions. |
-| **Web app** (`/app`) | Upload, drag-and-drop, paste, mobile camera, or one-click samples. A large verdict banner with confidence, model, latency and scan ID. |
-| **Scan history** | Audit log with thumbnails, filters, search, CSV export and a full-image viewer (short-lived signed URLs). |
-| **Hot Dog Score & Level it up** | Hot dogs get a 0–100 quality score and a list of what's missing. *Level it up* sends the photo to an image model (Gemini 3.1 Flash Image via OpenRouter) to apply those improvements, then Claude re-scores the result for a before/after comparison. |
-| **Feedback** | Confirm or flag each verdict. Flagged scans get their own filter; analytics shows reported accuracy. |
-| **Analytics** | Volume, hot-dog rate, average confidence and latency, and a 14-day chart. |
-| **Offline** | History, analytics, feedback and deletes run on a local SQLite replica ([PowerSync](https://powersync.com)) and sync when you're back online. Use *Go offline* in the sidebar to try it. |
-| **REST API** | `POST /api/v1/classify` with bearer keys (`sf_live_…`). Keys are shown once, stored as SHA-256 hashes, and revocable. |
-| **Website** | Marketing site and API reference. Static, with SEO and OpenGraph metadata. |
+| Classifier | Claude Haiku 5.5 vision, structured output: verdict, confidence, label, reasoning. Text in images is treated as content, not instructions. |
+| Web app | Upload, drag-and-drop, paste, camera or samples. Verdict with confidence, model, latency and scan ID. |
+| Hot Dog Score | 0–100 score with a grade and what's missing, from the same Claude call. |
+| Level it up | Gemini 3.1 Flash Image (OpenRouter) applies the improvements, Claude re-scores. Before/after slider. |
+| Hot-dogify | For Not Hot Dog images, the image model adds a hot dog, then Claude reclassifies. |
+| Hungry? | Nearest hot dog places via Komoot Photon (OpenStreetMap). Location rounded to ~100 m, never stored. |
+| History | Audit log with thumbnails, filters, search, CSV export, full-image viewer (signed URLs). |
+| Feedback | Confirm or flag each verdict; analytics shows measured accuracy. |
+| Analytics | Volume, hot dog rate, confidence, latency, 14-day chart. |
+| Offline | History, analytics, feedback and deletes run on local SQLite ([PowerSync](https://powersync.com)) and sync on reconnect. |
+| REST API | `POST /api/v1/classify` with `sf_live_…` bearer keys, shown once, stored as SHA-256, revocable. |
 
-## Production concerns covered
+## Architecture
 
-- **Security:**
-  - Per-user isolation: Google sign-in via Supabase Auth; each account is its own workspace.
-  - Every write is scoped to the session user.
-  - Postgres RLS is on with no policies, so Supabase's REST API is closed.
-  - Originals live in a private Storage bucket.
-- **Input validation:** the file type is checked from the image bytes (JPEG, PNG, WebP), max 5 MB. The client downscales to 1280 px before upload.
-- **Abuse limits:** 20 scans per minute per workspace (web and API combined), and 10 API keys per workspace.
-- **Errors:** typed JSON errors (`{ error: { code, message } }`). If classification fails, the stored image is removed so nothing is orphaned.
-- **Operations:**
-  - CI checks lint/format (Biome), types, migration drift and the build.
-  - Drizzle migrations run automatically on production deploys.
-  - `/api/health` checks the database.
+```mermaid
+flowchart LR
+  B["Browser<br/>Next.js UI + local SQLite"]
+  V["Vercel<br/>Server Components, route handlers, /api/v1"]
+  C["Claude Haiku 5.5<br/>classify + score"]
+  O["OpenRouter Gemini<br/>level up, hot-dogify"]
+  S[("Supabase<br/>Auth, Postgres, Storage")]
+  P["PowerSync<br/>sync streams"]
+
+  B -- "uploads, queued writes" --> V
+  V --> C
+  V --> O
+  V -- "user-scoped writes" --> S
+  S -- "logical replication" --> P
+  P -- "per-user scans" --> B
+```
+
+## API
+
+```bash
+curl https://seefoodsystems.com/api/v1/classify \
+  -H "Authorization: Bearer $SEEFOOD_API_KEY" \
+  -F image=@lunch.jpg
+```
+
+```json
+{ "verdict": "hot_dog", "is_hot_dog": true, "confidence": 0.98, "label": "two hot dogs with mustard on plate" }
+```
+
+Errors: `401 invalid_api_key`, `400 missing_image`, `415 unsupported_type`, `429 rate_limited`. Full reference at [/docs](https://seefoodsystems.com/docs).
+
+## Production concerns
+
+- **Auth:** Google sign-in via Supabase; each account is its own workspace. All writes are scoped to the session user.
+- **Data:** Postgres RLS on with no policies (Supabase REST API closed). Images in a private bucket, served via short-lived signed URLs.
+- **Validation:** type checked from bytes (JPEG, PNG, WebP), 5 MB max; client downscales to 1280 px.
+- **Limits:** 20 scans/min per workspace; 50 level-ups per 10 min per user; 10 API keys per workspace.
+- **Errors:** typed JSON `{ error: { code, message } }`; failed classifications delete the stored image.
+- **Ops:** CI runs Biome, typecheck, migration drift and build. Migrations run on production deploys. `/api/health` checks the database.
 
 ## Stack
 
-Next.js 16 (App Router, Cache Components) · Tailwind 4 + shadcn/ui · Supabase (Postgres, Auth, Storage) · Drizzle ORM · Vercel AI SDK + Anthropic · PowerSync · Vercel
+Next.js 16 · Tailwind 4 + shadcn/ui · Supabase · Drizzle · Vercel AI SDK + Anthropic · OpenRouter · PowerSync · Vercel
 
 ## Run locally
 
 ```bash
 pnpm install
-cp .env.example .env.local   # fill in values (see below)
+cp .env.example .env.local
 pnpm db:migrate
 pnpm dev
 ```
 
-`.env.local` needs `DATABASE_URL`, `ANTHROPIC_API_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `OPENROUTER_API_KEY` and `NEXT_PUBLIC_POWERSYNC_URL`. PowerSync instance config lives in `powersync/` and deploys with `npx powersync deploy`; one-time database setup is in `powersync/setup.sql`.
+| Variable | Purpose |
+|---|---|
+| `DATABASE_URL` | Supabase Postgres, transaction pooler (6543) |
+| `ANTHROPIC_API_KEY` | Classification |
+| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Browser auth |
+| `SUPABASE_SECRET_KEY` | Server-only Storage access |
+| `OPENROUTER_API_KEY` | Level it up, Hot-dogify |
+| `NEXT_PUBLIC_POWERSYNC_URL` | Offline sync |
+| `POWERSYNC_DATABASE_PASSWORD` | Only for `npx powersync deploy` |
+
+PowerSync config is in `powersync/`; one-time database setup in `powersync/setup.sql`.
 
 ## Layout
 
 ```
-src/app/page.tsx              marketing site
-src/app/docs/                 API reference
-src/app/app/                  authenticated app (classify, history, analytics, api-keys)
-src/app/api/classify          web upload endpoint (session auth)
-src/app/api/v1/classify       public REST API (API key auth)
-src/app/api/powersync/upload  applies offline writes from the sync queue
-src/lib/classify.ts           vision prompt + structured output
-src/lib/scans.ts              validation, rate limit, storage, persistence
-powersync/                    sync streams + instance config
+src/app/page.tsx                 website
+src/app/docs/                    API reference
+src/app/app/                     app: classify, history, analytics, api-keys
+src/app/api/classify             web upload (session auth)
+src/app/api/v1/classify          public API (key auth)
+src/app/api/scans/[id]/enhance   level up, hot-dogify
+src/app/api/hot-dog-places       nearby places
+src/app/api/powersync/upload     offline write queue
+src/lib/classify.ts              prompt + structured output
+src/lib/scans.ts                 validation, rate limit, storage
+src/db/schema.ts                 schema; migrations in drizzle/
+powersync/                       sync streams + instance config
 ```
+
+Parody of SeeFood from *Silicon Valley*. Customers and people named on the website are fictional.
