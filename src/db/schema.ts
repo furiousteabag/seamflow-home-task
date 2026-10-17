@@ -85,3 +85,21 @@ export const apiKeys = pgTable(
 
 export type Scan = typeof scans.$inferSelect;
 export type ApiKey = typeof apiKeys.$inferSelect;
+
+// One row per "Level it up" image generation, for rate limiting and cost auditing
+export const levelUps = pgTable(
+  "level_ups",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    userId: uuid()
+      .notNull()
+      .references(() => authUsers.id, { onDelete: "cascade" }),
+    scanId: uuid()
+      .notNull()
+      .references(() => scans.id, { onDelete: "cascade" }),
+    model: text().notNull(),
+    score: integer(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index().on(t.userId, t.createdAt)],
+).enableRLS();

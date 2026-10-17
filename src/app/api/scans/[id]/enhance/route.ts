@@ -1,13 +1,16 @@
-import { and, eq } from "drizzle-orm";
+import { and, count, eq, gt } from "drizzle-orm";
 import { db } from "@/db";
-import { scans } from "@/db/schema";
+import { levelUps, scans } from "@/db/schema";
 import { classifyImage } from "@/lib/classify";
-import { enhanceHotDog } from "@/lib/enhance";
+import { ENHANCER_MODEL_ID, enhanceHotDog } from "@/lib/enhance";
 import { parseImprovements, ScanError } from "@/lib/scans";
 import { SCANS_BUCKET, supabaseAdmin } from "@/lib/supabase/admin";
 import { getUser } from "@/lib/supabase/server";
 
 export const maxDuration = 120;
+
+const LEVEL_UP_LIMIT = 50;
+const LEVEL_UP_WINDOW_MS = 10 * 60_000;
 
 const error = (status: number, code: string, message: string) =>
   Response.json({ error: { code, message } }, { status });
@@ -28,11 +31,21 @@ export async function POST(
   if (!scan) return error(404, "not_found", "Scan not found");
   if (scan.verdict !== "hot_dog")
     return error(400, "not_a_hot_dog", "Only hot dogs can be leveled up");
-  if (scan.enhancedAt && Date.now() - scan.enhancedAt.getTime() < 20_000) {
+  // Image generation is the expensive call: cap it per user rather than per scan
+  const [{ recent }] = await db
+    .select({ recent: count() })
+    .from(levelUps)
+    .where(
+      and(
+        eq(levelUps.userId, user.id),
+        gt(levelUps.createdAt, new Date(Date.now() - LEVEL_UP_WINDOW_MS)),
+      ),
+    );
+  if (recent >= LEVEL_UP_LIMIT) {
     return error(
       429,
       "rate_limited",
-      "This hot dog was just leveled up, wait a moment",
+      `Level-up limit reached (${LEVEL_UP_LIMIT} per 10 minutes). Try again shortly.`,
     );
   }
 
@@ -49,6 +62,12 @@ export async function POST(
       parseImprovements(scan.improvements),
     );
     const rescored = await classifyImage(enhanced.bytes, enhanced.mediaType);
+    await db.insert(levelUps).values({
+      userId: user.id,
+      scanId: scan.id,
+      model: ENHANCER_MODEL_ID,
+      score: rescored.hot_dog_score,
+    });
 
     const enhancedPath = `${user.id}/${scan.id}-enhanced.${enhanced.mediaType.split("/")[1]}`;
     const upload = await supabaseAdmin.storage
