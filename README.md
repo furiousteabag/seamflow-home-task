@@ -39,7 +39,7 @@ An enterprise edition of Jian Yang's app from HBO's *Silicon Valley*, built as a
 ## Architecture
 
 ```mermaid
-flowchart LR
+flowchart TB
   subgraph Browser
     UI[Next.js app<br/>React 19 + shadcn/ui]
     LDB[(Local SQLite<br/>PowerSync)]
