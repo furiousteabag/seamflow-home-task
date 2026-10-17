@@ -1,5 +1,6 @@
 import { ShieldCheck } from "lucide-react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { signInAsGuest, signInWithGoogle } from "@/app/auth/actions";
 import { Logo } from "@/components/logo";
@@ -12,6 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { env } from "@/env";
+import { getUser } from "@/lib/supabase/server";
 
 export const metadata = { title: "Sign in" };
 
@@ -29,6 +31,7 @@ export default function LoginPage({ searchParams }: PageProps<"/login">) {
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           <Suspense>
+            <RedirectIfSignedIn />
             <GoogleSignIn />
           </Suspense>
           <form action={signInAsGuest}>
@@ -98,4 +101,10 @@ async function GoogleSignIn() {
       </Button>
     </form>
   );
+}
+
+// Already signed in: skip the sign-in screen
+async function RedirectIfSignedIn() {
+  if (await getUser()) redirect("/app");
+  return null;
 }
