@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { type Scan, scans } from "@/db/schema";
 import { classifyImage } from "@/lib/classify";
 import { SCANS_BUCKET, supabaseAdmin } from "@/lib/supabase/admin";
+import { makeThumbnail } from "@/lib/thumbnail";
 
 export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const RATE_LIMIT_PER_MINUTE = 20;
@@ -125,7 +126,8 @@ export async function createScan(input: {
       label: result.label.slice(0, 120),
       reasoning: result.reasoning.slice(0, 500),
       imagePath,
-      thumbnail: input.thumbnail,
+      thumbnail:
+        input.thumbnail || (await makeThumbnail(input.bytes).catch(() => "")),
       model: result.model,
       latencyMs: result.latencyMs,
       channel: input.channel,

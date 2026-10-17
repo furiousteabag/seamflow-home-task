@@ -154,9 +154,6 @@ export function ScanHistory() {
                   <th className="hidden px-4 py-2 font-medium sm:table-cell">
                     Score
                   </th>
-                  <th className="hidden px-4 py-2 font-medium sm:table-cell">
-                    Score
-                  </th>
                   <th className="hidden px-4 py-2 font-medium md:table-cell">
                     Channel
                   </th>
@@ -185,7 +182,7 @@ export function ScanHistory() {
                     <td className="px-4 py-2 tabular-nums">
                       {formatPercent(scan.confidence)}
                     </td>
-                    <td className="hidden px-4 py-2 tabular-nums sm:table-cell">
+                    <td className="hidden whitespace-nowrap px-4 py-2 tabular-nums sm:table-cell">
                       {scan.hot_dog_score ?? (
                         <span className="text-muted-foreground">—</span>
                       )}
