@@ -123,7 +123,7 @@ export default function PrivacyPage() {
         </ul>
       </section>
 
-      <section>
+      <section id="your-rights" className="scroll-mt-24">
         <h2>Retention and deletion</h2>
         <p>
           Scans and images are kept until you delete them. Deleting a scan in
