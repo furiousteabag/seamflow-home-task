@@ -6,8 +6,12 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { getScanImageUrl } from "@/app/app/actions";
 import { PageHeader } from "@/components/app/app-shell";
-import { HotDogScore } from "@/components/app/hot-dog-score";
-import { Hotdogify } from "@/components/app/hotdogify";
+import { CompareSlider, ImageView } from "@/components/app/compare-slider";
+import {
+  EnhanceAction,
+  ScoreSummary,
+  useEnhance,
+} from "@/components/app/hot-dog-score";
 import { ScanFeedback } from "@/components/app/scan-feedback";
 import { formatPercent, VerdictBadge } from "@/components/app/verdict-badge";
 import { Button } from "@/components/ui/button";
@@ -265,84 +269,116 @@ function ScanDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-h-[90svh] overflow-y-auto sm:max-w-lg">
+      <DialogContent className="max-h-[92svh] overflow-y-auto sm:max-w-4xl">
         {scan && (
-          <>
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <VerdictBadge verdict={scan.verdict} className="text-sm" />
-                <span className="truncate">{scan.label}</span>
-              </DialogTitle>
-              <DialogDescription>{scan.reasoning}</DialogDescription>
-            </DialogHeader>
-            <div className="flex aspect-[4/3] items-center justify-center overflow-hidden rounded-md bg-muted">
-              {fullUrl?.url ? (
-                // biome-ignore lint/performance/noImgElement: signed storage URL
-                <img
-                  src={fullUrl.url}
-                  alt={scan.label ?? ""}
-                  className="size-full object-contain"
-                />
-              ) : scan.thumbnail ? (
-                // biome-ignore lint/performance/noImgElement: offline thumbnail fallback
-                <img
-                  src={scan.thumbnail}
-                  alt=""
-                  className="size-full object-contain blur-[1px]"
-                />
-              ) : (
-                <ImageOff className="size-6 text-muted-foreground" />
-              )}
-            </div>
-            {scan.verdict === "hot_dog" && scan.hot_dog_score != null && (
-              <HotDogScore
-                key={`${scan.id}-${fullUrl?.enhancedUrl ? "e" : "o"}`}
-                scanId={scan.id}
-                score={scan.hot_dog_score}
-                improvements={parseImprovements(scan.improvements)}
-                beforeUrl={fullUrl?.url ?? scan.thumbnail}
-                enhancedScore={scan.enhanced_score}
-                enhancedUrl={fullUrl?.enhancedUrl}
-              />
-            )}
-            {scan.verdict === "not_hot_dog" && (
-              <Hotdogify
-                key={`${scan.id}-${fullUrl?.enhancedUrl ? "e" : "o"}`}
-                scanId={scan.id}
-                beforeUrl={fullUrl?.url ?? scan.thumbnail}
-                enhancedUrl={fullUrl?.enhancedUrl}
-                enhancedScore={scan.enhanced_score}
-              />
-            )}
-            <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
-              <dt className="text-muted-foreground">Confidence</dt>
-              <dd className="tabular-nums">{formatPercent(scan.confidence)}</dd>
-              <dt className="text-muted-foreground">Model</dt>
-              <dd className="font-mono">{scan.model}</dd>
-              <dt className="text-muted-foreground">Latency</dt>
-              <dd className="font-mono">{scan.latency_ms} ms</dd>
-              <dt className="text-muted-foreground">Channel</dt>
-              <dd className="uppercase">{scan.channel}</dd>
-              <dt className="text-muted-foreground">Scan ID</dt>
-              <dd className="truncate font-mono">{scan.id}</dd>
-              <dt className="text-muted-foreground">Created</dt>
-              <dd>{formatDate(scan.created_at)}</dd>
-            </dl>
-            <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">
-              <ScanFeedback scanId={scan.id} />
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-red-600"
-                onClick={() => onDelete(scan)}
-              >
-                <Trash2 className="size-3.5" /> Delete
-              </Button>
-            </div>
-          </>
+          <ScanDetail
+            key={`${scan.id}-${fullUrl?.enhancedUrl ? "e" : "o"}`}
+            scan={scan}
+            originalUrl={fullUrl?.url ?? null}
+            enhancedUrl={fullUrl?.enhancedUrl ?? null}
+            onDelete={onDelete}
+          />
         )}
       </DialogContent>
     </Dialog>
+  );
+}
+
+function ScanDetail({
+  scan,
+  originalUrl,
+  enhancedUrl,
+  onDelete,
+}: {
+  scan: LocalScan;
+  originalUrl: string | null;
+  enhancedUrl: string | null;
+  onDelete: (scan: LocalScan) => void;
+}) {
+  const hot = scan.verdict === "hot_dog";
+  const enhance = useEnhance(
+    scan.id,
+    enhancedUrl
+      ? {
+          url: enhancedUrl,
+          verdict: scan.enhanced_score != null ? "hot_dog" : null,
+          score: scan.enhanced_score,
+        }
+      : null,
+  );
+  const before = originalUrl ?? scan.thumbnail;
+
+  return (
+    <>
+      <DialogHeader>
+        <DialogTitle className="flex items-center gap-2">
+          <VerdictBadge verdict={scan.verdict} className="text-sm" />
+          <span className="truncate">{scan.label}</span>
+        </DialogTitle>
+        <DialogDescription>{scan.reasoning}</DialogDescription>
+      </DialogHeader>
+      <div className="grid items-start gap-6 md:grid-cols-[minmax(0,1fr)_300px]">
+        <div className="relative overflow-hidden rounded-md">
+          {before && enhance.result?.url ? (
+            <CompareSlider before={before} after={enhance.result.url} />
+          ) : before ? (
+            <ImageView src={before} alt={scan.label ?? ""} />
+          ) : (
+            <div className="flex aspect-[4/3] items-center justify-center bg-muted">
+              <ImageOff className="size-6 text-muted-foreground" />
+            </div>
+          )}
+          {enhance.busy && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background/60 text-sm font-medium backdrop-blur-[2px]">
+              <Loader2 className="size-6 animate-spin text-amber-500" />
+              {hot ? "Leveling up your hot dog…" : "Adding a hot dog…"}
+            </div>
+          )}
+        </div>
+        <div className="flex flex-col gap-5">
+          {hot && scan.hot_dog_score != null && (
+            <ScoreSummary
+              score={scan.hot_dog_score}
+              improvements={parseImprovements(scan.improvements)}
+            />
+          )}
+          {(!hot || scan.hot_dog_score != null) && originalUrl && (
+            <EnhanceAction
+              isHotDog={hot}
+              score={scan.hot_dog_score}
+              busy={enhance.busy}
+              result={enhance.result}
+              onRun={enhance.run}
+            />
+          )}
+          <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+            <dt className="text-muted-foreground">Confidence</dt>
+            <dd className="tabular-nums">{formatPercent(scan.confidence)}</dd>
+            <dt className="text-muted-foreground">Model</dt>
+            <dd className="truncate font-mono">{scan.model}</dd>
+            <dt className="text-muted-foreground">Latency</dt>
+            <dd className="font-mono">{scan.latency_ms} ms</dd>
+            <dt className="text-muted-foreground">Channel</dt>
+            <dd className="uppercase">{scan.channel}</dd>
+            <dt className="text-muted-foreground">Scan ID</dt>
+            <dd className="truncate font-mono">{scan.id}</dd>
+            <dt className="text-muted-foreground">Created</dt>
+            <dd>{formatDate(scan.created_at)}</dd>
+          </dl>
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">
+            <ScanFeedback scanId={scan.id} />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-red-600"
+              onClick={() => onDelete(scan)}
+            >
+              <Trash2 className="size-3.5" /> Delete
+            </Button>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
 
