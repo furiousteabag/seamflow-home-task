@@ -1,5 +1,8 @@
-import "dotenv/config";
+import { config } from "dotenv";
 import { defineConfig } from "drizzle-kit";
+
+// Same file Next.js uses locally; on Vercel/CI vars come from process.env
+config({ path: ".env.local", quiet: true });
 
 export default defineConfig({
   schema: "./src/db/schema.ts",
