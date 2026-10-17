@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { signInWithGoogle } from "@/app/auth/actions";
+import { signInAsGuest } from "@/app/auth/actions";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -16,14 +16,15 @@ export default function LoginPage({ searchParams }: PageProps<"/login">) {
         <CardHeader>
           <CardTitle className="text-2xl">Seamflow</CardTitle>
           <CardDescription>
-            Sign in to sync your items across devices. Works offline once
-            loaded.
+            Your items live on this device and sync to Postgres. Works offline
+            once loaded.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
-          <form action={signInWithGoogle}>
+          {/* Google sign-in (signInWithGoogle) is wired up; enable the provider in Supabase to add it back */}
+          <form action={signInAsGuest}>
             <Button type="submit" className="w-full">
-              Continue with Google
+              Continue as guest
             </Button>
           </form>
           <Suspense>

@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=https://unpkg.com/@powersync/cli-schemas@latest/json-schema/service-config.json
+# Full option reference: `npx powersync init cloud` template, https://docs.powersync.com/sync/overview
+
+_type: cloud
+name: Development
+# Locked when the instance was created; EU is close to clients, replication crosses to us-east-1
+region: eu
+
+replication:
+  connections:
+    - type: postgresql
+      # Direct connection (not the pooler): logical replication needs it
+      hostname: db.cctqlxspdkgcbnwpbmla.supabase.co
+      port: 5432
+      database: postgres
+      username: powersync_role
+      password:
+        secret: !env POWERSYNC_DATABASE_PASSWORD
+      sslmode: verify-full
+
+client_auth:
+  # Verify Supabase Auth JWTs via the project's JWKS
+  supabase: true

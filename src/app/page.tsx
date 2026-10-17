@@ -36,7 +36,8 @@ async function App() {
       <CardHeader>
         <CardTitle className="text-2xl">Seamflow</CardTitle>
         <CardDescription>
-          {user.email} · stored on this device, synced to Postgres by PowerSync
+          {user.email ?? "Guest"} · stored on this device, synced to Postgres by
+          PowerSync
         </CardDescription>
         <CardAction>
           <form action={signOut}>

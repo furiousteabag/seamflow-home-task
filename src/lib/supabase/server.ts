@@ -1,6 +1,7 @@
 import "server-only";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 import { env } from "@/env";
 
 export async function createClient() {
@@ -28,11 +29,13 @@ export async function createClient() {
 
 /** Verified user id + email from the session JWT, or null when signed out. */
 export async function getUser() {
+  // Supabase reads the clock while loading the session; keep it out of prerendering
+  await connection();
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
   if (!data?.claims) return null;
   return {
     id: data.claims.sub,
-    email: (data.claims.email as string | undefined) ?? null,
+    email: (data.claims.email as string | undefined) || null,
   };
 }

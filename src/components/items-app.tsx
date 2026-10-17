@@ -130,6 +130,16 @@ function SyncBadge() {
       ? "Syncing"
       : "Synced";
 
+  // Simulates losing the network: local reads/writes keep working, uploads queue
+  const toggleOffline = async () => {
+    if (status.connected || status.connecting) {
+      await db.disconnect();
+    } else {
+      const { connector } = await import("@/lib/powersync/db");
+      await db.connect(connector);
+    }
+  };
+
   return (
     <div className="flex items-center gap-2 text-sm text-muted-foreground">
       <span
@@ -147,6 +157,14 @@ function SyncBadge() {
           · {pending} change{pending === 1 ? "" : "s"} pending
         </span>
       )}
+      <Button
+        variant="link"
+        size="sm"
+        className="ml-auto h-auto p-0"
+        onClick={toggleOffline}
+      >
+        {status.connected || status.connecting ? "Go offline" : "Go online"}
+      </Button>
     </div>
   );
 }
