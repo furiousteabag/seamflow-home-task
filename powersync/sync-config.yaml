@@ -3,7 +3,7 @@ config:
   edition: 3
 
 streams:
-  # Each signed-in user gets only their own items
-  my_items:
+  # Each signed-in user gets only their own scan history (thumbnails included, full images stay in Storage)
+  my_scans:
     auto_subscribe: true
-    query: SELECT id, title, source, user_id, created_at FROM items WHERE user_id = auth.user_id()
+    query: SELECT id, verdict, confidence, label, reasoning, image_path, thumbnail, model, latency_ms, channel, feedback, created_at FROM scans WHERE user_id = auth.user_id()

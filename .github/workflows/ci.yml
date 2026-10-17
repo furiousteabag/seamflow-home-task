@@ -17,6 +17,7 @@ jobs:
       DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
       NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci
+      SUPABASE_SECRET_KEY: ci
       NEXT_PUBLIC_POWERSYNC_URL: https://example.powersync.journeyapps.com
     steps:
       - uses: actions/checkout@v4

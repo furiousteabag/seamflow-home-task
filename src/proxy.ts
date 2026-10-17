@@ -31,7 +31,6 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|@powersync|.*\\.(?:svg|png|jpg|jpeg|gif|webp|wasm|js)$).*)",
-  ],
+  // Only routes that read the session; marketing pages stay static
+  matcher: ["/app/:path*", "/login", "/auth/:path*", "/api/:path*"],
 };

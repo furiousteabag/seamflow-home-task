@@ -19,11 +19,11 @@ export async function signInAsGuest() {
   const supabase = await createClient();
   const { error } = await supabase.auth.signInAnonymously();
   if (error) redirect(`/login?error=${encodeURIComponent(error.message)}`);
-  redirect("/");
+  redirect("/app");
 }
 
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
-  redirect("/login");
+  redirect("/");
 }
