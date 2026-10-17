@@ -129,6 +129,12 @@ export async function createScan(input: {
       model: result.model,
       latencyMs: result.latencyMs,
       channel: input.channel,
+      ...(result.verdict === "hot_dog" && result.hot_dog_score != null
+        ? {
+            hotDogScore: result.hot_dog_score,
+            improvements: JSON.stringify(result.improvements.slice(0, 4)),
+          }
+        : {}),
     })
     .returning();
   return scan;
@@ -145,6 +151,21 @@ export function serializeScan(scan: Scan) {
     reasoning: scan.reasoning,
     model: scan.model,
     latency_ms: scan.latencyMs,
+    hot_dog_score: scan.hotDogScore,
+    improvements: parseImprovements(scan.improvements),
+    enhanced_score: scan.enhancedScore,
     created_at: scan.createdAt.toISOString(),
   };
+}
+
+export function parseImprovements(raw: string | null): string[] {
+  if (!raw) return [];
+  try {
+    const value = JSON.parse(raw);
+    return Array.isArray(value)
+      ? value.filter((v) => typeof v === "string")
+      : [];
+  } catch {
+    return [];
+  }
 }

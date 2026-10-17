@@ -12,6 +12,7 @@ An enterprise edition of Jian Yang's "Hot Dog or Not" from HBO's *Silicon Valley
 | **Classifier** | Claude Haiku 5.5 vision with structured output: verdict, confidence, label, one-line reasoning. Text inside images is treated as content, not instructions. |
 | **Web app** (`/app`) | Upload, drag-and-drop, paste, mobile camera, or one-click samples. A large verdict banner with confidence, model, latency and scan ID. |
 | **Scan history** | Audit log with thumbnails, filters, search, CSV export and a full-image viewer (short-lived signed URLs). |
+| **Hot Dog Score & Level it up** | Hot dogs get a 0–100 quality score and a list of what's missing. *Level it up* sends the photo to an image model (Gemini 3.1 Flash Image via OpenRouter) to apply those improvements, then Claude re-scores the result for a before/after comparison. |
 | **Feedback** | Confirm or flag each verdict. Flagged scans get their own filter; analytics shows reported accuracy. |
 | **Analytics** | Volume, hot-dog rate, average confidence and latency, and a 14-day chart. |
 | **Offline** | History, analytics, feedback and deletes run on a local SQLite replica ([PowerSync](https://powersync.com)) and sync when you're back online. Use *Go offline* in the sidebar to try it. |
@@ -46,7 +47,7 @@ pnpm db:migrate
 pnpm dev
 ```
 
-`.env.local` needs `DATABASE_URL`, `ANTHROPIC_API_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY` and `NEXT_PUBLIC_POWERSYNC_URL`. PowerSync instance config lives in `powersync/` and deploys with `npx powersync deploy`; one-time database setup is in `powersync/setup.sql`.
+`.env.local` needs `DATABASE_URL`, `ANTHROPIC_API_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `OPENROUTER_API_KEY` and `NEXT_PUBLIC_POWERSYNC_URL`. PowerSync instance config lives in `powersync/` and deploys with `npx powersync deploy`; one-time database setup is in `powersync/setup.sql`.
 
 ## Layout
 

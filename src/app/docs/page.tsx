@@ -31,6 +31,12 @@ const fields = [
   ["reasoning", "string", "One-sentence explanation"],
   ["model", "string", "Model that produced the verdict"],
   ["latency_ms", "integer", "Inference time"],
+  ["hot_dog_score", "integer 0–100 | null", "Quality rating, hot dogs only"],
+  [
+    "improvements",
+    "string[]",
+    "What would raise the score (empty for non hot dogs)",
+  ],
   ["created_at", "string (ISO 8601)", "When the scan was recorded"],
 ];
 
@@ -119,6 +125,8 @@ print(res.json()["verdict"])`}</Code>
   "reasoning": "The image shows a dog, not a sausage in a bun.",
   "model": "claude-haiku-5-5",
   "latency_ms": 1730,
+  "hot_dog_score": null,
+  "improvements": [],
   "created_at": "2026-10-17T14:04:14.360Z"
 }`}</Code>
         </div>
