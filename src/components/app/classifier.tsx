@@ -281,6 +281,27 @@ function ResultView({
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
         <div className="flex min-w-0 flex-col gap-6">
+          {/* Small screens: verdict first, the detail panel follows the image */}
+          <div
+            className={cn(
+              "flex items-center gap-3 rounded-xl px-4 py-3 text-white lg:hidden",
+              hot ? "bg-emerald-600" : "bg-red-600",
+            )}
+          >
+            {hot ? (
+              <CheckCircle2 className="size-7 shrink-0" />
+            ) : (
+              <XCircle className="size-7 shrink-0" />
+            )}
+            <div className="min-w-0">
+              <p className="text-2xl font-bold tracking-tight">
+                {hot ? "Hot Dog" : "Not Hot Dog"}
+              </p>
+              <p className="line-clamp-2 text-xs text-white/80">
+                {formatPercent(result.confidence)} · {result.label}
+              </p>
+            </div>
+          </div>
           <Card className="relative overflow-hidden py-0">
             {enhance.result?.url ? (
               <CompareSlider before={preview} after={enhance.result.url} />
@@ -303,7 +324,7 @@ function ResultView({
         <Card className="gap-0 overflow-hidden py-0 lg:sticky lg:top-8">
           <div
             className={cn(
-              "flex items-center gap-3 px-5 py-5 text-white",
+              "hidden items-center gap-3 px-5 py-5 text-white lg:flex",
               hot ? "bg-emerald-600" : "bg-red-600",
             )}
           >
@@ -316,7 +337,7 @@ function ResultView({
               <p className="text-3xl font-bold tracking-tight">
                 {hot ? "Hot Dog" : "Not Hot Dog"}
               </p>
-              <p className="truncate text-sm text-white/80">
+              <p className="line-clamp-2 text-sm text-white/80">
                 Detected: {result.label}
               </p>
             </div>
@@ -360,10 +381,10 @@ function ResultView({
               <ScanFeedback scanId={result.id} />
             </div>
 
-            <dl className="grid grid-cols-3 gap-2 rounded-md bg-muted/50 p-3 text-xs">
-              <div>
+            <dl className="grid grid-cols-2 gap-x-3 gap-y-2 rounded-md bg-muted/50 p-3 text-xs">
+              <div className="col-span-2">
                 <dt className="text-muted-foreground">Model</dt>
-                <dd className="truncate font-mono">{result.model}</dd>
+                <dd className="font-mono">{result.model}</dd>
               </div>
               <div>
                 <dt className="text-muted-foreground">Latency</dt>
